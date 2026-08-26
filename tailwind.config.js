@@ -8,14 +8,18 @@ export default {
     extend: {
       colors: {
         fisinor: {
+          white: '#FFFFFF',
+          hospital: '#F1F5F9',
           cyan: '#00A8CC',
           desert: '#FF9F1C',
-          dark: '#1E293B',
+          dark: '#0F172A',
+          slate: '#334155',
           medical: '#F8FAFC',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['ui-monospace', 'Consolas', 'monospace'],
       },
       animation: {
