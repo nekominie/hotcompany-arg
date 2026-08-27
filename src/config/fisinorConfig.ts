@@ -232,7 +232,7 @@ export const fisinorConfig: FisinorConfig = {
       { label: 'Sostenibilidad', href: '#sostenibilidad' },
       { label: 'Contacto', href: '#contacto' },
     ],
-    employeePortalLabel: 'Portal de Empleados',
+    employeePortalLabel: 'Acceder al portal',
   },
 
   hero: {

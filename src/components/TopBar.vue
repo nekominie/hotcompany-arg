@@ -9,16 +9,26 @@ const tickerText = fisinorConfig.topBar.ticker.join(' ')
     <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
       <div class="hidden items-center gap-3 font-medium text-fisinor-cyan sm:flex">
         <span class="relative flex h-2 w-2">
-          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-fisinor-cyan opacity-60" />
-          <span class="relative inline-flex h-2 w-2 rounded-full bg-fisinor-cyan" />
+          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-fisinor-ping opacity-60" />
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-fisinor-ping" />
         </span>
         {{ fisinorConfig.topBar.systemStatus }}
       </div>
 
       <div class="flex-1 overflow-hidden sm:mx-8">
-        <div class="whitespace-nowrap">
-          <span class="font-medium text-slate-700">Últimas noticias:</span>
-          <span class="ml-2 text-slate-500">{{ tickerText }}</span>
+        <div class="ticker-track flex whitespace-nowrap">
+          <span class="ticker-item inline-flex items-center">
+            <span class="font-medium text-slate-700">Últimas noticias:</span>
+            <span class="ml-2 text-slate-500">{{ tickerText }}</span>
+          </span>
+          <span class="ticker-item inline-flex items-center">
+            <span class="font-medium text-slate-700">Últimas noticias:</span>
+            <span class="ml-2 text-slate-500">{{ tickerText }}</span>
+          </span>
+          <span class="ticker-item inline-flex items-center">
+            <span class="font-medium text-slate-700">Últimas noticias:</span>
+            <span class="ml-2 text-slate-500">{{ tickerText }}</span>
+          </span>
         </div>
       </div>
 
@@ -31,3 +41,27 @@ const tickerText = fisinorConfig.topBar.ticker.join(' ')
     </div>
   </div>
 </template>
+
+<style scoped>
+.ticker-track {
+  animation: marquee 35s linear infinite;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+.ticker-item {
+  flex-shrink: 0;
+  padding-right: 4rem;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+</style>

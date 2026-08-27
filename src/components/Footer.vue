@@ -9,12 +9,13 @@ import { fisinorConfig } from '../config/fisinorConfig'
         <!-- Company info -->
         <div class="lg:col-span-1">
           <div class="flex items-center gap-3">
-            <svg class="h-10 w-10" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M32 4L56 17.5V44.5L32 58L8 44.5V17.5L32 4Z" stroke="#00A8CC" stroke-width="2.5" fill="#F8FAFC" />
-              <circle cx="32" cy="32" r="8" fill="#FF9F1C" />
-            </svg>
+            <img
+              src="/img/icon_fisinor.png"
+              alt="FISINOR"
+              class="h-10 w-10 object-contain"
+            />
             <div>
-              <div class="font-serif text-lg font-bold">{{ fisinorConfig.brand.shortName }}</div>
+              <div class="brand-title text-lg font-bold">{{ fisinorConfig.brand.shortName }}</div>
               <div class="text-[10px] uppercase tracking-wider text-slate-400">{{ fisinorConfig.brand.fullName }}</div>
             </div>
           </div>
