@@ -6,9 +6,9 @@ import { fisinorConfig } from '../config/fisinorConfig'
   <section id="investigacion" class="bg-fisinor-hospital py-24">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="mb-16 text-center">
-        <span class="text-xs font-bold uppercase tracking-widest text-fisinor-cyan">Unidades de Investigación</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-fisinor-cyan">Sectores de investigación</span>
         <h2 class="mt-3 font-serif text-3xl font-bold text-fisinor-dark sm:text-4xl">
-          División de bio-resiliencia institucional.
+          Divisiones de Desarrollo e Inteligencia.
         </h2>
         <p class="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
           Tres ejes de investigación que operan bajo protocolos corporativos, ética revisada y trazabilidad total.
