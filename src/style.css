@@ -50,6 +50,7 @@ body {
   font-weight: 800; /* ExtraBold */
   letter-spacing: 0.08em; /* Espaciado entre letras estilo corporativo */
   text-transform: uppercase;
+  color: rgb(86, 86, 86);
 }
 
 .bg-fisinor-ping{

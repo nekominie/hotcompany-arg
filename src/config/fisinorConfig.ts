@@ -10,6 +10,7 @@ export interface FisinorConfig {
   footer: FooterConfig
   employeePortal: EmployeePortalConfig
   images: ImageLibrary
+  anomalyReportForm: AnomalyReportFormConfig
 }
 
 export interface BrandConfig {
@@ -172,6 +173,95 @@ export interface ImageLibrary {
   testimonialA: string
   testimonialB: string
   testimonialC: string
+}
+
+export interface AnomalyReportFormConfig {
+  brand: {
+    shortName: string
+    fullName: string
+    logo: string
+    backToMainLabel: string
+  }
+  header: {
+    title: string
+    formCode: string
+    subtitle: string
+    notice: {
+      icon: string
+      title: string
+      message: string
+      confidentialityLevel: string
+    }
+  }
+  sections: {
+    notifier: {
+      title: string
+      description: string
+      email: FieldConfig
+      identifier: FieldConfig
+      anonymity: {
+        label: string
+        helper: string
+      }
+    }
+    sighting: {
+      title: string
+      description: string
+      location: SelectConfig
+      relation: SelectConfig
+    }
+    anomalies: {
+      title: string
+      description: string
+      options: AnomalyOptionConfig[]
+    }
+    evidence: {
+      title: string
+      description: string
+      dropzone: {
+        iconLabel: string
+        primaryText: string
+        secondaryText: string
+        supportedFormats: string
+      }
+    }
+    submit: {
+      label: string
+      unit: string
+      helper: string
+    }
+  }
+  footer: {
+    privacyNote: string
+    copyright: string
+  }
+}
+
+export interface FieldConfig {
+  id: string
+  label: string
+  placeholder: string
+  helper: string
+  required: boolean
+}
+
+export interface SelectConfig {
+  id: string
+  label: string
+  placeholder: string
+  required: boolean
+  options: SelectOptionConfig[]
+}
+
+export interface SelectOptionConfig {
+  value: string
+  label: string
+}
+
+export interface AnomalyOptionConfig {
+  id: string
+  label: string
+  help: string
 }
 
 export const fisinorConfig: FisinorConfig = {
@@ -480,5 +570,143 @@ export const fisinorConfig: FisinorConfig = {
     testimonialA: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400&q=80',
     testimonialB: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=400&q=80',
     testimonialC: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=400&q=80',
+  },
+
+  anomalyReportForm: {
+    brand: {
+      shortName: 'FISINOR',
+      fullName: 'Fisiología e Ingeniería Sintética del Noroeste',
+      logo: '/img/icon_fisinor.png',
+      backToMainLabel: 'Ir al sitio web principal',
+    },
+    header: {
+      title: 'Programa de Aseguramiento de Calidad',
+      formCode: 'rango: CIVIL (0)',
+      subtitle:
+        'Formulario Oficial de Notificación de Inconsistencias en Personas Duplicadas',
+      notice: {
+        icon: 'info',
+        title: '',
+        message:
+          'Si ha observado un comportamiento anómalo o una persona idéntica a un conocido en el campus o la vía pública, complete este formulario de inmediato.',
+        confidentialityLevel: '',
+      },
+    },
+    sections: {
+      notifier: {
+        title: 'Identificación del Notificante',
+        description: 'Los datos de contacto se utilizan exclusivamente para el tramite del expediente.',
+        email: {
+          id: 'notifierEmail',
+          label: 'Correo Electrónico',
+          placeholder: 'notificante@institucion.mx',
+          helper: 'Para seguimiento del caso',
+          required: true,
+        },
+        identifier: {
+          id: 'notifierIdentifier',
+          label: 'Nombre o alias / Codigo de Empleado',
+          placeholder: 'Ej. HMO-0001 o algun apodo',
+          helper: 'Opcional. Deje en blanco si desea anonimato.',
+          required: false,
+        },
+        anonymity: {
+          label: 'Ya he tenido acercamiento con FISINOR y sus servicios',
+          helper: 'Marque en caso de existir en la base de datos de la empresa. Esto nos permitirá brindarle una atencion mas personalizada.',
+        },
+      },
+      sighting: {
+        title: 'Datos del Avistamiento',
+        description: 'Seleccione la ubicación del avistamiento. En caso de una anomalia relacionada a personas clonadas, indique su relación con el occiso.',
+        location: {
+          id: 'sightingLocation',
+          label: 'Ubicación del avistamiento',
+          placeholder: 'Seleccione la ubicación',
+          required: true,
+          options: [
+            { value: 'unison-campus', label: 'Universidad de Sonora - Campus Hermosillo' },
+            { value: 'centro-artes', label: 'Centro de las Artes' },
+            { value: 'via-publica', label: 'Vía Pública / Parada de Autobús' },
+            { value: 'instalaciones-fisinor', label: 'Instalaciones FISINOR' },
+            { value: 'complejo-norte', label: 'Complejo Norte - Zona de Investigación' },
+            { value: 'otro', label: 'Otro (especificar en observaciones)' },
+          ],
+        },
+        relation: {
+          id: 'subjectRelation',
+          label: 'Relación con el sujeto observado',
+          placeholder: 'Seleccione la relación',
+          required: true,
+          options: [
+            { value: 'companero', label: 'Compañero / Conocido' },
+            { value: 'docente-personal', label: 'Docente / Personal' },
+            { value: 'desconocido', label: 'Desconocido / Transeúnte' },
+            { value: 'familiar', label: 'Familiar' },
+            { value: 'paciente', label: 'Paciente / Sujeto de seguimiento' },
+          ],
+        },
+      },
+      anomalies: {
+        title: 'Anomalias Observadas',
+        description: 'Seleccione todos los indicadores observados. La combinación de señales mejora la precisión del protocolo de contención.',
+        options: [
+          {
+            id: 'no-blinking',
+            label: 'Ausencia total de parpadeo por lapsos prolongados (>3 min).',
+            help: 'Signo de baja reactividad neural.',
+          },
+          {
+            id: 'low-temperature',
+            label: 'Temperatura cutánea anormalmente baja o sin sudoración ante exposición solar.',
+            help: 'Indicador de disfunción termorreguladora.',
+          },
+          {
+            id: 'void-stare',
+            label: 'Fijación ocular prolongada hacia muros, esquinas o espacios vacíos.',
+            help: 'Conducta de procesamiento externo.',
+          },
+          {
+            id: 'automated-responses',
+            label: 'Respuestas automatizadas o incapacidad para recordar eventos personales recientes.',
+            help: 'Posible fallo de memoria epigenética.',
+          },
+          {
+            id: 'metallic-odor',
+            label: 'Emanación de olor metálico (cobre) o antiséptico.',
+            help: 'Residuo de solución de preservación tisular.',
+          },
+          {
+            id: 'synchronized-movement',
+            label: 'Movimientos sincronizados con otros sujetos en proximidad.',
+            help: 'Patrón de enjambre observado en lotes Gemini.',
+          },
+          {
+            id: 'facial-recognition-failure',
+            label: 'Reconocimiento facial inconsistente por parte de terceros.',
+            help: 'El sujeto es identificado como otra persona o no es reconocido.',
+          },
+        ],
+      },
+      evidence: {
+        title: 'Evidencia Fotográfica',
+        description: 'Las evidencias se procesan bajo encriptación. No incluya fotografías de menores de edad.',
+        dropzone: {
+          iconLabel: 'Escáner / Cámara',
+          primaryText: 'Arrastre aquí la fotografía',
+          secondaryText: 'o haga clic para seleccionar un archivo desde su dispositivo',
+          supportedFormats: 'Formatos soportados: .jpg, .png, .raw, .dcm (máx. 25 MB)',
+        },
+      },
+      submit: {
+        label: 'Enviar Reporte',
+        unit: 'Continuar',
+        helper: 'Al enviar, usted acepta que la evidencia se incorpore al sistema de garantía de calidad biométrica.',
+      },
+    },
+    footer: {
+      privacyNote:
+        'La información proporcionada se procesa bajo protocolos institucionales de confidencialidad. La dirección IP y la huella del dispositivo quedan registradas para fines de trazabilidad.',
+      copyright: '© FISINOR S.A. de C.V. Programa de Garantía de Calidad Biométrica.',
+    },
   },
 }
