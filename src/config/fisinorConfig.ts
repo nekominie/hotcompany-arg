@@ -327,7 +327,7 @@ export const fisinorConfig: FisinorConfig = {
 
   hero: {
     eyebrow: 'Medicina · Ingeniería Sintética · Adaptación Genética',
-    headline: 'Pioneros en la modificación y aumentación del cuerpo humano en el noroeste.',
+    headline: 'Pioneros en la modificación del cuerpo humano en el noroeste.',
     subheadline:
       'Desde 1987, FISINOR desarrolla soluciones de bio-resiliencia para los cuerpos y comunidades que viven bajo el estrés radiante del desierto sonorense. Nuestra ciencia es confiable, medible y estrictamente confidencial.',
     ctaPrimary: { label: 'Conoce nuestro trabajo', href: '#investigacion' },
@@ -581,14 +581,15 @@ export const fisinorConfig: FisinorConfig = {
     },
     header: {
       title: 'Programa de Aseguramiento de Calidad',
-      formCode: 'rango: CIVIL (0)',
+      formCode: 'PUBLICO',
       subtitle:
-        'Formulario Oficial de Notificación de Inconsistencias en Personas Duplicadas',
+        'Formulario Oficial de Notificación de Inconsistencias en Personas Clonadas',
       notice: {
         icon: 'info',
         title: '',
-        message:
-          'Si ha observado un comportamiento anómalo o una persona idéntica a un conocido en el campus o la vía pública, complete este formulario de inmediato.',
+        message: "El siguiente formulario tiene como finalidad la recolección de hallazgos anormales en el comportamiento de las entidades del programa de clonación. Si usted o algun conocido ha tenido avistamientos de personas duplicadas con comportamientos altamente inhumanos, porfavor envie el formulario.",
+        /*message:
+          'Si ha observado un comportamiento anómalo o una persona idéntica a un conocido en el campus o la vía pública, complete este formulario de inmediato.',*/
         confidentialityLevel: '',
       },
     },
@@ -617,7 +618,7 @@ export const fisinorConfig: FisinorConfig = {
       },
       sighting: {
         title: 'Datos del Avistamiento',
-        description: 'Seleccione la ubicación del avistamiento. En caso de una anomalia relacionada a personas clonadas, indique su relación con el occiso.',
+        description: 'Seleccione la ubicación del avistamiento y su relación con el ente reportado.',
         location: {
           id: 'sightingLocation',
           label: 'Ubicación del avistamiento',
@@ -648,48 +649,53 @@ export const fisinorConfig: FisinorConfig = {
       },
       anomalies: {
         title: 'Anomalias Observadas',
-        description: 'Seleccione todos los indicadores observados. La combinación de señales mejora la precisión del protocolo de contención.',
+        description: 'Seleccione todos los indicadores que apliquen.',
         options: [
           {
             id: 'no-blinking',
             label: 'Ausencia total de parpadeo por lapsos prolongados (>3 min).',
-            help: 'Signo de baja reactividad neural.',
+            help: 'Signo de baja actividad neuronal.',
           },
           {
             id: 'low-temperature',
-            label: 'Temperatura cutánea anormalmente baja o sin sudoración ante exposición solar.',
+            label: 'Temperatura corporal anormalmente baja o sin sudoración ante exposición solar.',
             help: 'Indicador de disfunción termorreguladora.',
           },
           {
             id: 'void-stare',
-            label: 'Fijación ocular prolongada hacia muros, esquinas o espacios vacíos.',
-            help: 'Conducta de procesamiento externo.',
+            label: 'Mirada fija hacia muros, esquinas o espacios vacíos.',
+            help: 'Errores en conducta de procesamiento externo.',
           },
           {
             id: 'automated-responses',
-            label: 'Respuestas automatizadas o incapacidad para recordar eventos personales recientes.',
+            label: 'Respuestas automatizadas o repetitivas.',
             help: 'Posible fallo de memoria epigenética.',
           },
           {
             id: 'metallic-odor',
-            label: 'Emanación de olor metálico (cobre) o antiséptico.',
-            help: 'Residuo de solución de preservación tisular.',
+            label: 'Emanación de olor antiséptico (similar a antibacterial).',
+            help: 'Puede indicar residuos de solución de preservación tisular.',
           },
           {
             id: 'synchronized-movement',
             label: 'Movimientos sincronizados con otros sujetos en proximidad.',
-            help: 'Patrón de enjambre observado en lotes Gemini.',
+            help: 'Patrón de enjambre de comportamiento, indica fallo en autonomía de control motor.',
           },
           {
             id: 'facial-recognition-failure',
-            label: 'Reconocimiento facial inconsistente por parte de terceros.',
-            help: 'El sujeto es identificado como otra persona o no es reconocido.',
+            label: 'Reconocimiento facial inconsistente.',
+            help: 'El sujeto es incapaz de reconocer rostros familiares o conocidos.',
           },
+          {
+            id: 'voice-pitch',
+            label: 'Cambios anormales en el tono de voz o timbre vocal.',
+            help: 'Similares a pitidos o modulaciones de frecuencia inhumanas.',
+          }
         ],
       },
       evidence: {
         title: 'Evidencia Fotográfica',
-        description: 'Las evidencias se procesan bajo encriptación. No incluya fotografías de menores de edad.',
+        description: 'No incluya fotografías de menores de edad ni datos personales sensibles.',
         dropzone: {
           iconLabel: 'Escáner / Cámara',
           primaryText: 'Arrastre aquí la fotografía',
@@ -698,15 +704,15 @@ export const fisinorConfig: FisinorConfig = {
         },
       },
       submit: {
-        label: 'Enviar Reporte',
-        unit: 'Continuar',
-        helper: 'Al enviar, usted acepta que la evidencia se incorpore al sistema de garantía de calidad biométrica.',
+        label: 'Enviar',
+        unit: '',
+        helper: 'Al enviar, usted acepta que la evidencia se utilice para mejorar el servicio de clonación de personas.',
       },
     },
     footer: {
       privacyNote:
-        'La información proporcionada se procesa bajo protocolos institucionales de confidencialidad. La dirección IP y la huella del dispositivo quedan registradas para fines de trazabilidad.',
-      copyright: '© FISINOR S.A. de C.V. Programa de Garantía de Calidad Biométrica.',
+        'La información proporcionada se procesa bajo protocolos institucionales de estricta confidencialidad. En caso de requerir aclaraciones, utilice el portal de clientes para una atención mas personalizada.',
+      copyright: '© FISINOR S.A. de C.V. Programa de Aseguramiento de Calidad.',
     },
   },
 }

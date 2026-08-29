@@ -65,7 +65,7 @@ function onFileChange(event: Event) {
         <a href="/" class="flex items-center gap-3">
           <img :src="cfg.brand.logo" alt="FISINOR" class="h-11 w-11 object-contain" />
           <div class="leading-tight">
-            <div class="font-serif text-xl font-bold text-fisinor-dark">{{ cfg.brand.shortName }}</div>
+            <div class="font-serif text-xl font-bold brand-title">{{ cfg.brand.shortName }}</div>
             <div class="text-[10px] uppercase tracking-widest text-slate-500">{{ cfg.brand.fullName }}</div>
           </div>
         </a>
