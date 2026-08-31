@@ -11,6 +11,7 @@ interface ReportForm {
   sightingLocation: string
   subjectRelation: string
   anomalies: string[]
+  observations: string
 }
 
 const form = reactive<ReportForm>({
@@ -20,10 +21,32 @@ const form = reactive<ReportForm>({
   sightingLocation: '',
   subjectRelation: '',
   anomalies: [],
+  observations: '',
 })
 
 const isDragging = ref(false)
-const fileName = ref<string | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+const attachedFile = ref<File | null>(null)
+const previewUrl = ref<string | null>(null)
+const previewFailed = ref(false)
+
+function attachFile(file: File) {
+  clearAttachment()
+  attachedFile.value = file
+  previewUrl.value = URL.createObjectURL(file)
+  previewFailed.value = false
+}
+
+function clearAttachment() {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+  attachedFile.value = null
+  previewUrl.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
 
 function toggleAnomaly(id: string) {
   if (form.anomalies.includes(id)) {
@@ -45,14 +68,14 @@ function onDrop(event: DragEvent) {
   isDragging.value = false
   const files = event.dataTransfer?.files
   if (files && files.length > 0) {
-    fileName.value = files[0].name
+    attachFile(files[0])
   }
 }
 
 function onFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   if (input.files && input.files.length > 0) {
-    fileName.value = input.files[0].name
+    attachFile(input.files[0])
   }
 }
 </script>
@@ -270,7 +293,7 @@ function onFileChange(event: Event) {
               @dragleave.prevent="onDragLeave"
               @drop.prevent="onDrop"
             >
-              <input type="file" accept=".jpg,.png,.raw,.dcm" class="absolute inset-0 cursor-pointer opacity-0" @change="onFileChange" />
+              <input ref="fileInput" type="file" accept=".jpg,.png,.raw,.dcm" class="absolute inset-0 cursor-pointer opacity-0" @change="onFileChange" />
               <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-fisinor-cyan/10 text-fisinor-cyan">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -278,12 +301,34 @@ function onFileChange(event: Event) {
                 </svg>
               </div>
 
-              <div v-if="fileName" class="mt-4">
-                <div class="inline-flex items-center gap-2 rounded border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  {{ fileName }}
+              <div v-if="attachedFile" class="mt-5 flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm">
+                <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded border border-slate-200 bg-fisinor-hospital">
+                  <img
+                    v-if="previewUrl && !previewFailed"
+                    :src="previewUrl"
+                    :alt="attachedFile.name"
+                    class="h-full w-full object-cover"
+                    @error="previewFailed = true"
+                  />
+                  <div v-else class="flex h-full w-full items-center justify-center text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-fisinor-cyan">{{ cfg.sections.evidence.dropzone.previewLabel }}</p>
+                  <p class="mt-0.5 truncate text-sm font-medium text-fisinor-dark">{{ attachedFile.name }}</p>
+                  <button
+                    type="button"
+                    class="relative z-10 mt-2 inline-flex items-center gap-1.5 rounded border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100"
+                    @click.stop.prevent="clearAttachment"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    {{ cfg.sections.evidence.dropzone.removeLabel }}
+                  </button>
                 </div>
               </div>
 
@@ -295,7 +340,36 @@ function onFileChange(event: Event) {
             </div>
           </section>
 
-          <!-- Section 5: Submit -->
+          <!-- Section 5: Free-text observations -->
+          <section class="mb-10">
+            <div class="mb-5 flex items-center gap-3">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-fisinor-dark text-sm font-bold text-white">5</div>
+              <div>
+                <h3 class="font-serif text-lg font-semibold text-fisinor-dark">{{ cfg.sections.observations.title }}</h3>
+                <p class="text-xs text-slate-500">{{ cfg.sections.observations.description }}</p>
+              </div>
+            </div>
+
+            <div>
+              <label :for="cfg.sections.observations.field.id" class="block text-sm font-semibold text-slate-700">
+                {{ cfg.sections.observations.field.label }}
+              </label>
+              <p class="text-xs text-slate-500">{{ cfg.sections.observations.field.helper }}</p>
+              <textarea
+                :id="cfg.sections.observations.field.id"
+                v-model="form.observations"
+                :placeholder="cfg.sections.observations.field.placeholder"
+                :maxlength="cfg.sections.observations.field.maxLength"
+                rows="6"
+                class="mt-2 w-full resize-y rounded border border-slate-300 px-3 py-2.5 text-sm focus:border-fisinor-cyan focus:outline-none focus:ring-1 focus:ring-fisinor-cyan"
+              ></textarea>
+              <p class="mt-1 text-right text-xs text-slate-400">
+                {{ form.observations.length }} / {{ cfg.sections.observations.field.maxLength }}
+              </p>
+            </div>
+          </section>
+
+          <!-- Submit -->
           <div class="rounded border border-fisinor-desert/20 bg-fisinor-desert/5 p-5">
             <button
               type="button"

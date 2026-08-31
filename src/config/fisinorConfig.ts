@@ -223,6 +223,19 @@ export interface AnomalyReportFormConfig {
         primaryText: string
         secondaryText: string
         supportedFormats: string
+        previewLabel: string
+        removeLabel: string
+      }
+    }
+    observations: {
+      title: string
+      description: string
+      field: {
+        id: string
+        label: string
+        placeholder: string
+        helper: string
+        maxLength: number
       }
     }
     submit: {
@@ -701,6 +714,20 @@ export const fisinorConfig: FisinorConfig = {
           primaryText: 'Arrastre aquí la fotografía',
           secondaryText: 'o haga clic para seleccionar un archivo desde su dispositivo',
           supportedFormats: 'Formatos soportados: .jpg, .png, .raw, .dcm (máx. 25 MB)',
+          previewLabel: 'Evidencia adjunta',
+          removeLabel: 'Eliminar adjunto',
+        },
+      },
+      observations: {
+        title: 'Observaciones',
+        description: 'Espacio para capturar cualquier detalle adicional del avistamiento.',
+        field: {
+          id: 'observations',
+          label: 'Observaciones adicionales',
+          placeholder:
+            'Describa con la mayor precisión posible el comportamiento observado, hora aproximada, contexto y cualquier otro dato que considere relevante para el expediente.',
+          helper: 'Texto libre. Este campo alimenta el expediente de seguimiento.',
+          maxLength: 2000,
         },
       },
       submit: {
