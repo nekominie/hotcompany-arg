@@ -223,6 +223,9 @@ export interface AnomalyReportFormConfig {
         primaryText: string
         secondaryText: string
         supportedFormats: string
+        maxFiles: number
+        maxFilesLabel: string
+        acceptFormats: string
         previewLabel: string
         removeLabel: string
       }
@@ -246,6 +249,10 @@ export interface AnomalyReportFormConfig {
   }
   footer: {
     privacyNote: string
+    clientPortalLink: {
+      text: string
+      href: string
+    }
     copyright: string
   }
 }
@@ -600,7 +607,7 @@ export const fisinorConfig: FisinorConfig = {
       notice: {
         icon: 'info',
         title: '',
-        message: "El siguiente formulario tiene como finalidad la recolección de hallazgos anormales en el comportamiento de las entidades del programa de clonación. Si usted o algun conocido ha tenido avistamientos de personas duplicadas con comportamientos altamente inhumanos, porfavor envie el formulario.",
+        message: "El siguiente formulario tiene como finalidad la recolección de hallazgos anormales en el comportamiento de las entidades del programa de clonación. Si usted o algun conocido ha tenido avistamientos de personas duplicadas con comportamientos altamente inhumanos, porfavor envie este reporte.",
         /*message:
           'Si ha observado un comportamiento anómalo o una persona idéntica a un conocido en el campus o la vía pública, complete este formulario de inmediato.',*/
         confidentialityLevel: '',
@@ -711,11 +718,14 @@ export const fisinorConfig: FisinorConfig = {
         description: 'No incluya fotografías de menores de edad ni datos personales sensibles.',
         dropzone: {
           iconLabel: 'Escáner / Cámara',
-          primaryText: 'Arrastre aquí la fotografía',
-          secondaryText: 'o haga clic para seleccionar un archivo desde su dispositivo',
-          supportedFormats: 'Formatos soportados: .jpg, .png, .raw, .dcm (máx. 25 MB)',
+          primaryText: 'Arrastre aquí las fotografías',
+          secondaryText: 'o haga clic para seleccionar archivos desde su dispositivo',
+          supportedFormats: 'Formatos soportados: .jpg, .png, .raw, .dcm (máx. 25 MB por archivo)',
+          maxFiles: 5,
+          maxFilesLabel: 'Máximo 5 archivos',
+          acceptFormats: '.jpg,.png,.raw,.dcm',
           previewLabel: 'Evidencia adjunta',
-          removeLabel: 'Eliminar adjunto',
+          removeLabel: 'Eliminar',
         },
       },
       observations: {
@@ -725,7 +735,7 @@ export const fisinorConfig: FisinorConfig = {
           id: 'observations',
           label: 'Observaciones adicionales',
           placeholder:
-            'Describa con la mayor precisión posible el comportamiento observado, hora aproximada, contexto y cualquier otro dato que considere relevante para el expediente.',
+            'Descripción del hallazgo y cualquier otro dato que considere relevante para el expediente.',
           helper: 'Texto libre. Este campo alimenta el expediente de seguimiento.',
           maxLength: 2000,
         },
@@ -733,12 +743,16 @@ export const fisinorConfig: FisinorConfig = {
       submit: {
         label: 'Enviar',
         unit: '',
-        helper: 'Al enviar, usted acepta que la evidencia se utilice para mejorar el servicio de clonación de personas.',
+        helper: 'Al enviar, usted acepta que la información se utilice para mejorar el servicio de clonación de personas.',
       },
     },
     footer: {
       privacyNote:
-        'La información proporcionada se procesa bajo protocolos institucionales de estricta confidencialidad. En caso de requerir aclaraciones, utilice el portal de clientes para una atención mas personalizada.',
+        'La información proporcionada se procesa bajo protocolos institucionales de estricta confidencialidad. En caso de requerir aclaraciones, utilice el portal de clientes para una atención más personalizada.',
+      clientPortalLink: {
+        text: 'portal de clientes',
+        href: '/clientes.html',
+      },
       copyright: '© FISINOR S.A. de C.V. Programa de Aseguramiento de Calidad.',
     },
   },

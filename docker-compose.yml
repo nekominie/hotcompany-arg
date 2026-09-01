@@ -1,6 +1,35 @@
-version: '3.8'
-
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fisinor_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fisinor_db
+      POSTGRES_USER: kiara_ai
+      POSTGRES_PASSWORD: lovingFisinor6ñ?
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - fisinor-network
+
+  fisinor-api:
+    build:
+      context: ../fisinor-api/Fisinor.Api
+      dockerfile: Dockerfile
+    container_name: fisinor-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=fisinor_db;Username=kiara_ai;Password=lovingFisinor6ñ?
+      Storage__EvidenceBasePath: /app/uploads/evidence
+    volumes:
+      - evidence_uploads:/app/uploads/evidence
+    depends_on:
+      - postgres
+    networks:
+      - fisinor-network
+
   fisinor-web:
     build:
       context: .
@@ -9,3 +38,15 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
+    depends_on:
+      - fisinor-api
+    networks:
+      - fisinor-network
+
+volumes:
+  pgdata:
+  evidence_uploads:
+
+networks:
+  fisinor-network:
+    driver: bridge
