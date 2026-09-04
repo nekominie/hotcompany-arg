@@ -1,0 +1,461 @@
+/* Estilos de la página de distribución — mapa a pantalla completa con paneles flotantes */
+
+/* Contenedor raíz: el mapa llena todo el viewport */
+.dp-fullscreen {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.dp-map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.dp-fullscreen .leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Capa de paneles flotantes sobre el mapa */
+.dp-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  pointer-events: none; /* el mapa sigue siendo interactivo por debajo */
+}
+
+.dp-overlay > * {
+  pointer-events: auto; /* ...excepto los paneles mismos */
+}
+
+/* Marcadores: pin gota con color por estado + etiqueta (idéntico al masterpanel) */
+.dpin {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+/* Pin tipo gota con color por estado */
+.dpin__pin {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin-top: 4px;
+  border: 2.5px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.4);
+  flex-shrink: 0;
+}
+
+.dpin--active .dpin__pin,
+.dpin.active .dpin__pin {
+  background: #00a8cc;
+}
+
+.dpin--resupply .dpin__pin,
+.dpin.resupply .dpin__pin {
+  background: #ff9f1c;
+}
+
+.dpin--unavailable .dpin__pin,
+.dpin.unavailable .dpin__pin {
+  background: #ef4444;
+}
+
+.dpin--selected .dpin__pin {
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.35), 0 3px 8px rgba(15, 23, 42, 0.45);
+  transform: rotate(-45deg) scale(1.18);
+  z-index: 5;
+}
+
+.dpin__label {
+  margin-top: 1px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 5px rgba(15, 23, 42, 0.25);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dpin--selected .dpin__label {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+}
+/* Barra superior flotante */
+.dp-topbar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dp-topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 10px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.35);
+  text-decoration: none;
+}
+
+.dp-topbar__logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.dp-topbar__name {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.dp-topbar__sub {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.dp-topbar__title {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .dp-topbar__title {
+    display: block;
+    margin-left: 8px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.35);
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+}
+
+.dp-topbar__back {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  background: #0f172a;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.55);
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.dp-topbar__back:hover {
+  background: #1e293b;
+}
+
+/* Columna de paneles flotantes (izquierda) */
+.dp-panels {
+  position: absolute;
+  top: 84px;
+  left: 16px;
+  bottom: 16px;
+  width: min(384px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+/* Tarjeta flotante base */
+.dp-card {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.4);
+  padding: 18px;
+  flex-shrink: 0;
+}
+
+.dp-card__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.dp-card__eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #00a8cc;
+;
+}
+
+.dp-card__text {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #475569;
+}
+
+/* Botón para colapsar los paneles y dejar el mapa libre */
+.dp-panels-toggle {
+  position: absolute;
+  left: 16px;
+  bottom: 20px;
+  z-index: 510;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.35);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dp-panels-toggle:hover {
+  background: #fff;
+}
+
+.dp-toggle-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.dp-panels--hidden {
+  display: none;
+}
+
+/* Nota legal discreta sobre el mapa */
+.dp-footer-note {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 8px;
+  z-index: 490;
+  max-width: min(520px, 80vw);
+  margin: 0;
+  font-size: 9.5px;
+  line-height: 1.4;
+  color: rgba(71, 85, 105, 0.85);
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+
+/* Stats del programa */
+.dp-stats {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.dp-stat {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: rgba(241, 245, 249, 0.8);
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.dp-stat__label {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.dp-stat__value {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Leyenda */
+.dp-legend {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dp-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.dp-legend__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.25);
+  flex-shrink: 0;
+}
+
+.dp-legend__dot--active {
+  background: #00a8cc;
+}
+
+.dp-legend__dot--resupply {
+  background: #ff9f1c;
+}
+
+.dp-legend__dot--unavailable {
+  background: #ef4444;
+}
+
+/* Ficha del punto */
+.dp-point-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dp-point-card__meta {
+  margin-top: 10px;
+  display: grid;
+  gap: 7px;
+  font-size: 12.5px;
+}
+
+.dp-point-card__row {
+  display: flex;
+  gap: 10px;
+  color: #475569;
+}
+
+.dp-point-card__label {
+  width: 62px;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #94a3b8;
+  font-size: 11px;
+  padding-top: 1px;
+}
+
+.dp-point-card__note {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.9);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+/* Badges */
+.dp-badge {
+  display: inline-block;
+  padding: 1px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dp-badge--green {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.dp-badge--amber {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dp-badge--red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Controles de zoom de Leaflet alineados con el diseño */
+.leaflet-control-zoom {
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.35) !important;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: #0f172a !important;
+}
+
+/* Zoom en la esquina inferior derecha: separado de la atribución */
+.leaflet-bottom.leaflet-right .leaflet-control-zoom {
+  margin-bottom: 28px;
+  margin-right: 10px;
+}
+
+/* Atribución compacta */
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  font-size: 10px !important;
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 767px) {
+  .dp-panels {
+    top: 78px;
+    left: 12px;
+    right: 12px;
+    bottom: 64px;
+    width: auto;
+  }
+
+  .dp-topbar {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .dp-panels-toggle {
+    left: 12px;
+    bottom: 16px;
+  }
+}

@@ -9,8 +9,186 @@ export interface FisinorConfig {
   testimonials: TestimonialConfig[]
   footer: FooterConfig
   employeePortal: EmployeePortalConfig
+  portalSelector: PortalSelectorConfig
   images: ImageLibrary
   anomalyReportForm: AnomalyReportFormConfig
+  tienda: TiendaConfig
+  distribucion: DistribucionConfig
+}
+
+export interface DistributionPointConfig {
+  id: string
+  name: string
+  municipality: string
+  lat: number
+  lng: number
+  address: string
+  schedule: string
+  phone: string
+  status: 'active' | 'resupply' | 'unavailable'
+  note: string
+}
+
+export interface DistributionStatConfig {
+  id: string
+  label: string
+  value: string
+}
+
+export interface DistributionLegendConfig {
+  id: DistributionPointConfig['status']
+  label: string
+}
+
+export interface DistribucionConfig {
+  brandTitle: string
+  brandSubtitle: string
+  backLabel: string
+  footerNote: string
+  apiEndpoint: string
+  center: { lat: number; lng: number }
+  zoom: number
+  legend: DistributionLegendConfig[]
+  program: {
+    title: string
+    paragraphs: string[]
+    stats: DistributionStatConfig[]
+    dataSourceApi: string
+  }
+  panel: {
+    pointsLabel: string
+    pointCountLabel: string
+    selectHint: string
+    addressLabel: string
+    scheduleLabel: string
+    phoneLabel: string
+    statusLabels: Record<DistributionPointConfig['status'], string>
+    showPanelsLabel: string
+    hidePanelsLabel: string
+    formTitle: string
+    formFields: {
+      name: TiendaFieldConfig
+      address: TiendaFieldConfig
+      schedule: TiendaFieldConfig
+      phone: TiendaFieldConfig
+      note: TiendaFieldConfig
+    }
+    statusFieldLabel: string
+    savePointLabel: string
+    cancelLabel: string
+    deletePointLabel: string
+  }
+}
+
+export interface TiendaCategory {
+  id: string
+  label: string
+}
+
+export interface TiendaProductReview {
+  author: string
+  rating: number
+  comment: string | null
+}
+
+export interface TiendaProduct {
+  id: string
+  code: string
+  name: string
+  categoryId: string
+  price: number
+  unit: string
+  stock: 'available' | 'soldout'
+  blurb: string
+  detail: string
+  features: string[]
+  origin: string
+  rating: number
+  reviewCount: number
+  imageUrl?: string
+  reviews?: TiendaProductReview[]
+}
+
+export interface TiendaFieldConfig {
+  label: string
+  placeholder: string
+}
+
+export interface TiendaConfig {
+  brandTitle: string
+  brandSubtitle: string
+  backLabel: string
+  notice: string
+  loginLabel: string
+  demoSessionLabel: string
+  logoutLabel: string
+  cartLabel: string
+  cartEmptyText: string
+  filterAllLabel: string
+  addToCartLabel: string
+  soldOutLabel: string
+  availableLabel: string
+  checkoutLabel: string
+  footerNote: string
+  loginHref: string
+  registerHref: string
+  session: {
+    loginLabel: string
+    logoutLabel: string
+    modalTitle: string
+    modalText: string
+    identifierLabel: string
+    identifierPlaceholder: string
+    passwordLabel: string
+    passwordPlaceholder: string
+    submitLabel: string
+    submittingLabel: string
+    errorFallback: string
+    registerText: string
+    registerLabel: string
+  }
+  categories: TiendaCategory[]
+  products: TiendaProduct[]
+  checkout: {
+    title: string
+    steps: string[]
+    accountTitle: string
+    accountText: string
+    accountLoginLabel: string
+    accountRegisterText: string
+    accountRegisterLabel: string
+    accountDemoLabel: string
+    accountDemoNote: string
+    shippingTitle: string
+    shippingFields: Record<'name' | 'address' | 'sector' | 'city' | 'zip' | 'phone', TiendaFieldConfig>
+    paymentTitle: string
+    paymentFields: Record<'cardNumber' | 'cardExpiry' | 'cardCvc' | 'cardHolder', TiendaFieldConfig>
+    orderSummaryLabel: string
+    payLabel: string
+    processingLabel: string
+    confirmationTitle: string
+    confirmationText: string
+    continueLabel: string
+  }
+  detail: {
+    breadcrumbHome: string
+    galleryLabels: string[]
+    ratingLabel: string
+    qtyLabel: string
+    soldOutNote: string
+    notifyLabel: string
+    notifyDone: string
+    aboutTitle: string
+    specsTitle: string
+    specsLabels: Record<
+      'code' | 'category' | 'unit' | 'origin' | 'classification' | 'registry',
+      string
+    >
+    registryPrefix: string
+    deliveryNote: string
+    relatedTitle: string
+    backLabel: string
+  }
 }
 
 export interface BrandConfig {
@@ -161,6 +339,23 @@ export interface EmployeePortalConfig {
   closeLabel: string
 }
 
+export interface PortalSelectorConfig {
+  title: string
+  subtitle: string
+  options: PortalOptionConfig[]
+}
+
+export interface PortalOptionConfig {
+  id: string
+  title: string
+  description: string
+  cta: string
+  icon: 'user' | 'badge'
+  accent: 'cyan' | 'dark'
+  action: 'modal' | 'link'
+  href?: string
+}
+
 export interface ImageLibrary {
   hero: string
   about: string
@@ -305,7 +500,7 @@ export const fisinorConfig: FisinorConfig = {
   },
 
   topBar: {
-    systemStatus: 'SISTEMAS PARA SUSCRIPTORES Y EMPLEADOS | ACTIVO [HERMOSILLO]',
+    systemStatus: 'PORTALES PARA SUSCRIPTORES Y EMPLEADOS | ACTIVO [HERMOSILLO]',
     ticker: [
       'HydraSoma: pausa temporal de la campaña gratuita por reabastecimiento —',
       'Circular de información civil vigente —',
@@ -322,25 +517,20 @@ export const fisinorConfig: FisinorConfig = {
       { label: 'Inicio', href: '#inicio' },
       {
         label: 'Nosotros',
-        href: '#nosotros',
-        children: [
-          { label: 'Historia', href: '#historia' },
-          { label: 'Liderazgo', href: '#liderazgo' },
-          { label: 'Impacto Regional', href: '#impacto' },
-        ],
+        href: '#nosotros'
       },
       {
         label: 'Investigación',
         href: '#investigacion',
         children: [
-          { label: 'Adaptación Térmica', href: '#adaptacion-termica' },
-          { label: 'Biomecánica Tisular', href: '#biomecanica-tisular' },
-          { label: 'Genómica Celular', href: '#genomica-celular' },
+          { label: 'Productos', href: '#adaptacion-termica' },
+          { label: 'Servicios', href: '#biomecanica-tisular' },
+          { label: 'Programas', href: '#genomica-celular' },
         ],
       },
       { label: 'Prensa y Avisos', href: '#prensa' },
-      { label: 'Sostenibilidad', href: '#sostenibilidad' },
       { label: 'Contacto', href: '#contacto' },
+      { label: 'Tienda', href: '/tienda.html' },
     ],
     employeePortalLabel: 'Acceder al portal',
   },
@@ -578,6 +768,36 @@ export const fisinorConfig: FisinorConfig = {
     closeLabel: 'Cerrar',
   },
 
+  portalSelector: {
+    title: 'Acceso a Portales Institucionales',
+    subtitle:
+      'Seleccione el portal correspondiente a su perfil.',
+    options: [
+      {
+        id: 'clients',
+        title: 'Portal de Clientes/Suscriptores',
+        description:
+          'Espacio para suscriptores activos de nuestros programas: consulte el estado de su expediente y de seguimiento a sus compras y servicios.',
+        cta: 'Ingresar como cliente',
+        icon: 'user',
+        accent: 'cyan',
+        action: 'link',
+        href: import.meta.env.VITE_CLIENTS_PORTAL_URL ?? 'http://localhost:5181/',
+      },
+      {
+        id: 'employees',
+        title: 'Portal de Empleados',
+        description:
+          'Sistema exclusivo para el personal de la empresa. Su acceso requiere conexion a la red privada virtual de KIARA AI y credenciales de empleado.',
+        cta: 'Ingresar como empleado',
+        icon: 'badge',
+        accent: 'dark',
+        action: 'link',
+        href: import.meta.env.VITE_EMPLOYEES_PORTAL_URL ?? 'http://localhost:5182/',
+      },
+    ],
+  },
+
   images: {
     hero: 'https://images.unsplash.com/photo-1581093458791-9d42e3c7e117?auto=format&fit=crop&w=1920&q=85',
     about: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=85',
@@ -755,5 +975,418 @@ export const fisinorConfig: FisinorConfig = {
       },
       copyright: '© FISINOR S.A. de C.V. Programa de Aseguramiento de Calidad.',
     },
+  },
+
+  tienda: {
+    brandTitle: 'Tienda Oficial FISINOR',
+    brandSubtitle: 'Productos de grado consumidor · Entregas en Sonora',
+    backLabel: 'Volver al sitio',
+    notice:
+      'Aviso: HydraSoma permanece temporalmente agotada por reabastecimiento. Gracias por su paciencia.',
+    loginLabel: 'Acceder',
+    demoSessionLabel: 'Sesión demo',
+    logoutLabel: 'Cerrar sesión',
+    cartLabel: 'Carrito',
+    cartEmptyText: 'Tu carrito está vacío.',
+    filterAllLabel: 'Todos',
+    addToCartLabel: 'Añadir al carrito',
+    soldOutLabel: 'AGOTADO',
+    availableLabel: 'Disponible',
+    checkoutLabel: 'Proceder al pago',
+    footerNote:
+      '© FISINOR S.A. de C.V. Tienda oficial de grado consumidor. Todos los productos están sujetos a disponibilidad y a los Términos de Integración.',
+    loginHref: import.meta.env.VITE_CLIENTS_PORTAL_URL ?? 'http://localhost:5181/',
+    registerHref: `${import.meta.env.VITE_CLIENTS_PORTAL_URL ?? 'http://localhost:5181/'}register`,
+    session: {
+      loginLabel: 'Acceder',
+      logoutLabel: 'Cerrar sesión',
+      modalTitle: 'Inicia sesión como cliente de FISINOR',
+      modalText:
+        'Ingresa con tus credenciales de cliente de FISINOR — las mismas de tu cuenta en el Portal de Clientes. La sesión se comparte entre la tienda y el portal, así que puedes iniciar aquí y seguir en el portal.',
+      identifierLabel: 'Correo o usuario',
+      identifierPlaceholder: 'nombre@correo.com · usuario.fisinor',
+      passwordLabel: 'Contraseña',
+      passwordPlaceholder: 'Tu contraseña',
+      submitLabel: 'Iniciar sesión',
+      submittingLabel: 'Verificando...',
+      errorFallback: 'No se pudo iniciar sesión. Verifica tus credenciales.',
+      registerText: '¿Aún no tienes cuenta?',
+      registerLabel: 'Regístrate en el Portal de Clientes',
+    },
+    categories: [
+      { id: 'hidratacion', label: 'Hidratación' },
+      { id: 'rendimiento', label: 'Rendimiento Físico' },
+      { id: 'cuidado', label: 'Cuidado Personal' },
+      { id: 'estilo', label: 'Estilo de Vida' },
+    ],
+    products: [
+      {
+        id: 'p-hs-1l',
+        code: 'HS-1L',
+        name: 'HydraSoma Botella 1 L',
+        categoryId: 'hidratacion',
+        price: 349,
+        unit: 'botella',
+        stock: 'soldout',
+        blurb: 'La bebida oficial de hidratación celular del campus.',
+        detail:
+          'HydraSoma es la bebida de hidratación celular insignia de FISINOR, formulada con la matriz de biopolímero activo patentada por nuestros laboratorios y electrolitos bio-orgánicos de liberación gradual. Diseñada para mantener el equilibrio hídrico del cuerpo bajo radiación extrema, es la opción preferida por atletas, trabajadores de campo y suscriptores del programa de adapción térmica.',
+        features: [
+          'Matriz de biopolímero activo patentada por FISINOR',
+          'Electrolitos bio-orgánicos de liberación gradual',
+          'Sabor natural a cítricos del desierto',
+          'Envase retornable de 1 litro con sello de trazabilidad',
+        ],
+        origin: 'Planta Central Hermosillo',
+        rating: 4.8,
+        reviewCount: 1243,
+      },
+      {
+        id: 'p-hs-6pk',
+        code: 'HS-6PK',
+        name: 'HydraSoma Pack Familiar (6 × 1 L)',
+        categoryId: 'hidratacion',
+        price: 1790,
+        unit: 'pack',
+        stock: 'soldout',
+        blurb: 'Suministro mensual de hidratación aumentada para toda la familia.',
+        detail:
+          'El Pack Familiar reúne seis botellas de HydraSoma con descuento de suscripción, pensado para hogares completos expuestos a las temporadas de calor. Cada pack incluye una guía de consumo por edad y un accesorio de refrigeración para el traslado.',
+        features: [
+          'Seis botellas de 1 L con precio de suscripción',
+          'Guía de consumo por edad incluida',
+          'Accesorio de refrigeración para traslado',
+          'Renovación automática opcional del pack',
+        ],
+        origin: 'Planta Central Hermosillo',
+        rating: 4.7,
+        reviewCount: 812,
+      },
+      {
+        id: 'p-hs-sob',
+        code: 'HS-SOB',
+        name: 'HydraSoma Sobres Hidratantes (12 pzas)',
+        categoryId: 'hidratacion',
+        price: 289,
+        unit: 'caja',
+        stock: 'available',
+        blurb: 'Formato de bolsillo para rehidratación inmediata bajo el sol de Sonora.',
+        detail:
+          'Los sobres hidratantes de HydraSoma concentran la misma fórmula de la bebida original en un polvo de disolución instantánea. Ideales para jornadas de campo, mochilas de emergencia y kits vehiculares: un sobre en medio litro de agua restaura el equilibrio hídrico en minutos.',
+        features: [
+          'Disolución instantánea en medio litro de agua',
+          'Empaquetado individual resistente a humedad',
+          '12 sobres por caja · hasta 6 litros de bebida',
+          'Apto para kits de emergencia y mochilas de campo',
+        ],
+        origin: 'Planta Central Hermosillo',
+        rating: 4.6,
+        reviewCount: 389,
+      },
+      {
+        id: 'p-bs-250',
+        code: 'BS-250',
+        name: 'Bio-Sinter Crema Térmica 250 g',
+        categoryId: 'rendimiento',
+        price: 529,
+        unit: 'tubo',
+        stock: 'soldout',
+        blurb: 'Soporte térmico tópico para entrenamientos bajo radiación extrema.',
+        detail:
+          'Bio-Sinter Crema Térmica es el soporte tópico desarrollado junto al programa de adaptación térmica. Su aplicación antes de la exposición genera una capa bio-orgánica que ayuda a regular la temperatura superficial de la piel durante entrenamientos y jornadas de campo bajo radiación extrema.',
+        features: [
+          'Capa bio-orgánica reguladora de temperatura superficial',
+          'Absorción rápida sin residuo graso',
+          'Efecto de hasta 4 horas por aplicación',
+          'Desarrollado junto al programa de adaptación térmica',
+        ],
+        origin: 'Laboratorio Bio-Sintético Norte',
+        rating: 4.9,
+        reviewCount: 967,
+      },
+      {
+        id: 'p-bs-180',
+        code: 'BS-180',
+        name: 'Bio-Sinter Gel Recuperador 180 g',
+        categoryId: 'rendimiento',
+        price: 399,
+        unit: 'tubo',
+        stock: 'available',
+        blurb: 'Gel frío de recuperación muscular con microcápsulas de liberación prolongada.',
+        detail:
+          'El Bio-Sinter Gel Recuperador aplica frío controlado mediante microcápsulas de liberación prolongada que acompañan la recuperación muscular después de la exposición al calor o de entrenamientos de alta exigencia. Recomendado por los fisioterapeutas del campus.',
+        features: [
+          'Microcápsulas de frío de liberación prolongada',
+          'Alivio sostenido durante la noche',
+          'Fórmula no grasa de rápida absorción',
+          'Recomendado por fisioterapia del campus',
+        ],
+        origin: 'Laboratorio Bio-Sintético Norte',
+        rating: 4.5,
+        reviewCount: 431,
+      },
+      {
+        id: 'p-tt-v2',
+        code: 'TT-V2',
+        name: 'Pulsera TITAN v2 de Monitoreo',
+        categoryId: 'rendimiento',
+        price: 4890,
+        unit: 'pieza',
+        stock: 'soldout',
+        blurb: 'Monitoreo continuo de marcadores vitales sincronizado con su expediente.',
+        detail:
+          'La Pulsera TITAN v2 monitorea en continuo temperatura corporal, hidratación estimada y tasa de deriva personal, sincronizando los datos directamente con su expediente del Portal de Clientes. Incluye dos correas y base de carga magnética.',
+        features: [
+          'Monitoreo continuo de marcadores vitales',
+          'Sincronización directa con su expediente del Portal de Clientes',
+          'Alertas tempranas de estrés térmico',
+          'Incluye 2 correas y base de carga magnética',
+        ],
+        origin: 'Laboratorio Bio-Sintético Norte',
+        rating: 4.4,
+        reviewCount: 158,
+      },
+      {
+        id: 'p-pr-noc',
+        code: 'PR-NOC',
+        name: 'Parches de Recuperación Nocturna (8 pzas)',
+        categoryId: 'rendimiento',
+        price: 459,
+        unit: 'caja',
+        stock: 'soldout',
+        blurb: 'Microdosis transdérmicas para regeneración durante el sueño.',
+        detail:
+          'Los parches de recuperación nocturna liberan microdosis transdérmicas de aminoácidos modificados durante las horas de sueño, apoyando los ciclos naturales de regeneración tisular. Un solo parche actúa durante la noche completa.',
+        features: [
+          'Liberación transdérmica durante 8 horas',
+          'Aminoácidos modificados de grado consumo',
+          'Hipoalergénico y libre de fragancias',
+          'Caja con 8 parches de un solo uso',
+        ],
+        origin: 'Laboratorio Bio-Sintético Norte',
+        rating: 4.3,
+        reviewCount: 244,
+      },
+      {
+        id: 'p-so-ojo',
+        code: 'SO-OJO',
+        name: 'Suero Ocular Ojo-Sintético',
+        categoryId: 'cuidado',
+        price: 689,
+        unit: 'frasco',
+        stock: 'soldout',
+        blurb: 'Lubricación avanzada para ojos expuestos a polvo y radiación del desierto.',
+        detail:
+          'El Suero Ocular Ojo-Sintético replica la lágrima bio-orgánica desarrollada para los operadores de campo de FISINOR. Lubrica en profundidad, protege contra partículas de polvo del desierto y reduce la irritación por radiación y pantallas.',
+        features: [
+          'Réplica de lágrima bio-orgánica de uso profesional',
+          'Protección contra polvo y radiación',
+          'Aplicador de precisión sin contacto',
+          'Frasco de 15 ml · hasta 90 aplicaciones',
+        ],
+        origin: 'Unidad Experimental Costa',
+        rating: 4.6,
+        reviewCount: 312,
+      },
+      {
+        id: 'p-uv-plus',
+        code: 'UV-PLUS',
+        name: 'Crema Neutralizadora de Radiación UV+',
+        categoryId: 'cuidado',
+        price: 499,
+        unit: 'tubo',
+        stock: 'available',
+        blurb: 'Pantalla bio-orgánica de amplio espectro para índices UV extremos.',
+        detail:
+          'La Crema Neutralizadora UV+ ofrece una pantalla bio-orgánica de amplio espectro probada bajo los índices de radiación extremos del desierto sonorense. Su textura ligera resiste el sudor y no deja residuo blanco, apta para uso diario de toda la familia.',
+        features: [
+          'Protección de amplio espectro para UV extremos',
+          'Resistente al sudor y al agua por 80 minutos',
+          'Textura ligera sin residuo blanco',
+          'Apta para uso diario de toda la familia',
+        ],
+        origin: 'Unidad Experimental Costa',
+        rating: 4.7,
+        reviewCount: 528,
+      },
+      {
+        id: 'p-kit-casa',
+        code: 'KIT-CASA',
+        name: 'Kit de Evaluación en Casa',
+        categoryId: 'cuidado',
+        price: 1290,
+        unit: 'kit',
+        stock: 'soldout',
+        blurb: 'Toma de muestras y marcadores básicos con envío al laboratorio incluido.',
+        detail:
+          'El Kit de Evaluación en Casa permite tomar muestras y registrar marcadores básicos siguiendo la guía ilustrada incluida. El envío al laboratorio y la lectura de resultados en su expediente del Portal de Clientes están cubiertos por el precio del kit.',
+        features: [
+          'Toma de muestras guiada paso a paso',
+          'Envío al laboratorio incluido',
+          'Resultados integrados a su expediente en línea',
+          'Incluye material para una evaluación completa',
+        ],
+        origin: 'Laboratorio Bio-Sintético Norte',
+        rating: 4.2,
+        reviewCount: 96,
+      },
+      {
+        id: 'p-tr-900',
+        code: 'TR-900',
+        name: 'Termo Térmico Edición Campus 900 ml',
+        categoryId: 'estilo',
+        price: 549,
+        unit: 'pieza',
+        stock: 'soldout',
+        blurb: 'Doble pared con grabado del hexagrama institucional.',
+        detail:
+          'El Termo Edición Campus mantiene bebidas frías hasta 24 horas y calientes hasta 12, con doble pared de acero inoxidable y el hexagrama institucional grabado por láser. Incluye tapón hermético con dosificador.',
+        features: [
+          'Doble pared de acero inoxidable',
+          'Hasta 24 h frío · 12 h caliente',
+          'Hexagrama institucional grabado por láser',
+          'Tapón hermético con dosificador',
+        ],
+        origin: 'Planta Central Hermosillo',
+        rating: 4.8,
+        reviewCount: 674,
+      },
+      {
+        id: 'p-ph-hom',
+        code: 'PH-HOM',
+        name: 'Playera "Personal Homologado"',
+        categoryId: 'estilo',
+        price: 349,
+        unit: 'pieza',
+        stock: 'available',
+        blurb: 'Algodón orgánico sonorense con el sello de personal homologado.',
+        detail:
+          'La playera "Personal Homologado" está confeccionada en algodón orgánico sonorense con el sello institucional serigrafiado. Una prenda de compromiso para quienes forman parte —o sueñan con formar parte— de los programas de FISINOR.',
+        features: [
+          'Algodón orgánico 100% sonorense',
+          'Sello institucional serigrafiado',
+          'Tallas de la S a la XXL',
+          'Lavado a máquina sin deterioro del sello',
+        ],
+        origin: 'Planta Central Hermosillo',
+        rating: 4.9,
+        reviewCount: 231,
+      },
+    ],
+    checkout: {
+      title: 'Finalizar compra',
+      steps: ['Carrito', 'Cuenta FISINOR', 'Envío', 'Pago', 'Confirmación'],
+      accountTitle: 'Identifícate con tu cuenta FISINOR',
+      accountText:
+        'Para completar tu compra necesitas iniciar sesión con tu cuenta de suscriptor del Portal de Clientes. Serás redirigido a la pantalla de acceso oficial.',
+      accountLoginLabel: 'Iniciar sesión',
+      accountRegisterText: '¿Aún no tienes cuenta?',
+      accountRegisterLabel: 'Regístrate aquí',
+      accountDemoLabel: 'Simular sesión iniciada (demo)',
+      accountDemoNote: 'Modo de prueba: la sesión se simula localmente sin salir de la tienda.',
+      shippingTitle: 'Datos de entrega',
+      shippingFields: {
+        name: { label: 'Nombre completo', placeholder: 'Nombre y apellidos' },
+        address: { label: 'Dirección de entrega', placeholder: 'Calle, número, referencias' },
+        sector: { label: 'Sector / Lote', placeholder: 'Ej. Sector 4 · Lote 12-B' },
+        city: { label: 'Ciudad', placeholder: 'Ej. Hermosillo, Sonora' },
+        zip: { label: 'Código postal', placeholder: 'Ej. 83000' },
+        phone: { label: 'Teléfono de contacto', placeholder: 'Ej. 662 123 4567' },
+      },
+      paymentTitle: 'Pago seguro (simulado)',
+      paymentFields: {
+        cardNumber: { label: 'Número de tarjeta', placeholder: '•••• •••• •••• ••••' },
+        cardExpiry: { label: 'Vencimiento', placeholder: 'MM/AA' },
+        cardCvc: { label: 'CVV', placeholder: '•••' },
+        cardHolder: { label: 'Titular de la tarjeta', placeholder: 'Como aparece en la tarjeta' },
+      },
+      orderSummaryLabel: 'Resumen del pedido',
+      payLabel: 'Pagar',
+      processingLabel: 'Procesando pago...',
+      confirmationTitle: '¡Compra realizada!',
+      confirmationText:
+        'Tu pedido {folio} ha sido registrado. Recibirás la confirmación y el seguimiento de entrega en tu correo registrado.',
+      continueLabel: 'Seguir comprando',
+    },
+    detail: {
+      breadcrumbHome: 'Tienda',
+      galleryLabels: ['FRENTE', 'DETALLE', 'ETIQUETA', 'USO'],
+      ratingLabel: 'calificaciones',
+      qtyLabel: 'Cantidad',
+      soldOutNote: 'Producto temporalmente agotado. Déjanos notificarte cuando vuelva al inventario.',
+      notifyLabel: 'Notificarme cuando esté disponible',
+      notifyDone: 'Te notificaremos. Tu solicitud quedó registrada en el sistema.',
+      aboutTitle: 'Acerca de este producto',
+      specsTitle: 'Especificaciones',
+      specsLabels: {
+        code: 'Código',
+        category: 'Categoría',
+        unit: 'Presentación',
+        origin: 'Origen',
+        classification: 'Disponibilidad',
+        registry: 'Registro sanitario',
+      },
+      registryPrefix: 'REG-FIS-2026-',
+      deliveryNote: 'Entrega estimada: 3 a 5 días hábiles en Hermosillo y zona metropolitana.',
+      relatedTitle: 'Productos relacionados',
+      backLabel: 'Volver al catálogo',
+    },
+  },
+
+  distribucion: {
+    brandTitle: 'Red de Distribución HydraSoma',
+    brandSubtitle: 'Ubica tu punto de distribución más cercano',
+    backLabel: 'Volver al sitio',
+    footerNote:
+      '© FISINOR S.A. de C.V. Programa de Distribución HydraSoma. Los puntos mostrados corresponden al ciclo vigente y pueden cambiar sin previo aviso.',
+    apiEndpoint: '/api/v1/distribution-points',
+    center: { lat: 29.0833, lng: -110.9640 },
+    zoom: 17,
+    legend: [
+      { id: 'active', label: 'Activo · con inventario' },
+      { id: 'resupply', label: 'Reabastecimiento en camino' },
+      { id: 'unavailable', label: 'Temporalmente sin servicio' },
+    ],
+    program: {
+      title: 'Programa de Distribución HydraSoma',
+      paragraphs: [
+        'La red de distribución de HydraSoma acerca la hidratación celular de FISINOR a los hogares de Sonora a través de puntos autorizados en plazas, tiendas aliadas y módulos móviles del campus.',
+        'Cada punto recibe inventario certificado y es auditado semanalmente por el programa de garantía de calidad. Presenta tu gafete de suscriptor o tu código de expediente para acceder a precios preferenciales.',
+      ],
+      stats: [
+        { id: 'active-points', label: 'PUNTOS ACTIVOS', value: '6' },
+        { id: 'municipalities', label: 'MUNICIPIOS', value: '4' },
+        { id: 'next-resupply', label: 'PRÓXIMA REPOSICIÓN', value: '14 OCT' },
+      ],
+      dataSourceApi: 'Datos: API de distribución (v1) en línea',
+    },
+    panel: {
+      pointsLabel: 'Puntos de distribución',
+      pointCountLabel: 'puntos visibles',
+      selectHint: 'Haz clic en un marcador del mapa para ver los detalles del punto.',
+      addressLabel: 'Dirección',
+      scheduleLabel: 'Horario',
+      phoneLabel: 'Teléfono',
+      statusLabels: {
+        active: 'Activo',
+        resupply: 'En reabastecimiento',
+        unavailable: 'Sin servicio',
+      },
+      showPanelsLabel: 'Mostrar paneles',
+      hidePanelsLabel: 'Ocultar paneles',
+      formTitle: 'Nuevo punto de distribución',
+      formFields: {
+        name: { label: 'Nombre del punto', placeholder: 'Ej. Módulo Campus Norte' },
+        address: { label: 'Dirección', placeholder: 'Calle, número, referencias' },
+        schedule: { label: 'Horario', placeholder: 'Ej. Lun–Sáb · 08:00 a 20:00 h' },
+        phone: { label: 'Teléfono', placeholder: 'Ej. 662 123 4567' },
+        note: { label: 'Nota para el visitante', placeholder: 'Ej. Ingreso por la puerta este del estacionamiento.' },
+      },
+      statusFieldLabel: 'Estado del punto',
+      savePointLabel: 'Guardar punto',
+      cancelLabel: 'Cancelar',
+      deletePointLabel: 'Eliminar',
+    },
+
   },
 }

@@ -18,6 +18,8 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
         reports: resolve(import.meta.dirname, 'reports.html'),
+        tienda: resolve(import.meta.dirname, 'tienda.html'),
+        distribucion: resolve(import.meta.dirname, 'distribucion.html'),
       },
     },
   },
