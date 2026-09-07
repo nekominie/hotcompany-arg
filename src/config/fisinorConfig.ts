@@ -10,6 +10,31 @@ export interface FisinorConfig {
   footer: FooterConfig
   employeePortal: EmployeePortalConfig
   portalSelector: PortalSelectorConfig
+  assistant: {
+    buttonLabel: string
+    chatTitle: string
+    chatStatus: string
+    onlineStatus: string
+    typingLabel: string
+    emptyMessage: string
+    inputPlaceholder: string
+    replyPlaceholder: string
+    offlineNotice: string
+    sendLabel: string
+    closeLabel: string
+  }
+  vpnWarning: {
+    stamp: string
+    title: string
+    message: string
+    requirementsTitle: string
+    requirements: string[]
+    contactTitle: string
+    contactName: string
+    contactEmail: string
+    contactExtension: string
+    acceptLabel: string
+  }
   images: ImageLibrary
   anomalyReportForm: AnomalyReportFormConfig
   tienda: TiendaConfig
@@ -352,7 +377,7 @@ export interface PortalOptionConfig {
   cta: string
   icon: 'user' | 'badge'
   accent: 'cyan' | 'dark'
-  action: 'modal' | 'link'
+  action: 'modal' | 'link' | 'vpn'
   href?: string
 }
 
@@ -788,14 +813,45 @@ export const fisinorConfig: FisinorConfig = {
         id: 'employees',
         title: 'Portal de Empleados',
         description:
-          'Sistema exclusivo para el personal de la empresa. Su acceso requiere conexion a la red privada virtual de KIARA AI y credenciales de empleado.',
+          'Sistema exclusivo para el personal de la empresa. Su acceso requiere conexion a la red privada virtual de FISINOR y credenciales de empleado.',
         cta: 'Ingresar como empleado',
         icon: 'badge',
         accent: 'dark',
-        action: 'link',
-        href: import.meta.env.VITE_EMPLOYEES_PORTAL_URL ?? 'http://localhost:5182/',
+        action: 'vpn',
       },
     ],
+  },
+
+  assistant: {
+    buttonLabel: 'Asistente',
+    chatTitle: 'Asistente FISINOR',
+    chatStatus: 'Desconectado',
+    onlineStatus: 'En línea',
+    typingLabel: 'Escribiendo...',
+    emptyMessage: 'Aún no hay mensajes. ¡Escribe para comenzar!',
+    inputPlaceholder: 'Escribe tu mensaje...',
+    replyPlaceholder: 'Escribe tu correo electrónico...',
+    offlineNotice: 'El asistente está desconectado por el momento.',
+    sendLabel: 'Enviar mensaje',
+    closeLabel: 'Cerrar asistente',
+  },
+
+  vpnWarning: {
+    stamp: 'Acceso restringido',
+    title: 'Conexión segura requerida',
+    message:
+      'El Portal de Empleados de FISINOR no está disponible desde redes públicas. Para continuar necesitas estar conectado a la Red Privada Virtual (VPN) institucional de FISINOR.',
+    requirementsTitle: 'Antes de intentar el acceso:',
+    requirements: [
+      'Conéctate a la VPN institucional de FISINOR desde tu equipo autorizado.',
+      'Verifica que el ícono de la VPN indique conexión activa.',
+      'Regresa a esta página y vuelve a seleccionar el portal.',
+    ],
+    contactTitle: '¿No cuentas con acceso a la VPN?',
+    contactName: 'Administración de Redes · FISINOR',
+    contactEmail: 'redes@fisinor.com.mx',
+    contactExtension: 'EXT. 4000',
+    acceptLabel: 'Entendido, cerrar',
   },
 
   images: {

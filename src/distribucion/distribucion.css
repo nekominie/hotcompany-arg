@@ -438,6 +438,128 @@
   font-size: 10px !important;
 }
 
+/* ---------- Lista de pines cargados ---------- */
+.dp-list-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dp-list-card__count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dp-points-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dp-points-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dp-points-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.dp-points-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dp-point-item {
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+  text-align: left;
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.9);
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.dp-point-item:hover {
+  background: #fff;
+  border-color: #00a8cc;
+  box-shadow: 0 4px 14px -8px rgba(0, 168, 204, 0.5);
+  transform: translateY(-1px);
+}
+
+.dp-point-item:focus-visible {
+  outline: 2px solid #00a8cc;
+  outline-offset: 2px;
+}
+
+.dp-point-item--selected {
+  background: #0f172a;
+  border-color: #0f172a;
+  box-shadow: 0 8px 20px -10px rgba(15, 23, 42, 0.6);
+}
+
+.dp-point-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.dp-point-item__name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.dp-point-item--selected .dp-point-item__name {
+  color: #fff;
+}
+
+.dp-point-item .dp-badge {
+  margin-top: 4px;
+}
+
+.dp-point-item__meta {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.dp-point-item__meta strong {
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.dp-point-item--selected .dp-point-item__meta {
+  color: #cbd5e1;
+}
+
+.dp-points-empty {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
 /* ---------- Responsivo ---------- */
 @media (max-width: 767px) {
   .dp-panels {

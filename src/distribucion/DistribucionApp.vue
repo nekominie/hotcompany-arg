@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import { fisinorConfig, type DistributionPointConfig } from '../config/fisinorConfig'
 
@@ -32,6 +32,7 @@ const selectedPoint = computed(
   () => points.value.find((point) => point.id === selectedPointId.value) ?? null,
 )
 const panelsHidden = ref(false)
+const pointsListEl = ref<HTMLElement | null>(null)
 
 const statusChipClass: Record<DistributionPoint['status'], string> = {
   active: 'dp-badge--green',
@@ -103,10 +104,24 @@ function selectPoint(pointId: string) {
   const point = points.value.find((candidate) => candidate.id === pointId)
   selectedPointId.value = pointId
 
-  // Centrar la cámara en el punto seleccionado
+  // Centrar la cámara en el punto seleccionado con efecto de vuelo
   if (point && map) {
-    map.flyTo([point.lat, point.lng], Math.max(map.getZoom(), 13), { duration: 0.7 })
+    map.flyTo([point.lat, point.lng], Math.max(map.getZoom(), 13), { duration: 1.2 })
   }
+
+  scrollListToSelected()
+}
+
+function scrollListToSelected() {
+  nextTick(() => {
+    if (!selectedPointId.value) return
+    // Busca dentro del panel de lista; si no existe (paneles ocultos), no hace nada
+    const container = pointsListEl.value
+    const target = container?.querySelector(
+      `[data-point-id="${selectedPointId.value}"]`,
+    )
+    target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  })
 }
 
 // --- Carga de datos desde la API (única fuente de verdad) ---
@@ -254,6 +269,60 @@ watch(selectedPointId, () => {
           </div>
           <p class="dp-card__text" style="font-size: 11px; color: #94a3b8">
             {{ distribucion.panel.selectHint }}
+          </p>
+        </article>
+
+        <!-- Lista de pines cargados -->
+        <article class="dp-card dp-list-card">
+          <div class="dp-list-card__head">
+            <p class="dp-card__eyebrow" style="color: #0f172a">
+              {{ distribucion.panel.pointsLabel }}
+            </p>
+            <span class="dp-list-card__count">
+              {{ points.length }} {{ distribucion.panel.pointCountLabel }}
+            </span>
+          </div>
+
+          <div
+            v-if="points.length > 0"
+            ref="pointsListEl"
+            class="dp-points-list"
+            role="list"
+            aria-label="Lista de puntos de distribución"
+          >
+            <button
+              v-for="point in points"
+              :key="point.id"
+              type="button"
+              role="listitem"
+              class="dp-point-item"
+              :class="{ 'dp-point-item--selected': point.id === selectedPointId }"
+              :data-point-id="point.id"
+              :aria-current="point.id === selectedPointId ? 'true' : undefined"
+              :title="`Volar a ${point.name}`"
+              @click="selectPoint(point.id)"
+            >
+              <span class="dp-point-item__head">
+                <span class="dp-point-item__name">{{ point.name }}</span>
+                <span class="dp-legend__dot" :class="statusDotClass[point.status]" aria-hidden="true"></span>
+              </span>
+              <span class="dp-badge" :class="statusChipClass[point.status]">
+                {{ distribucion.panel.statusLabels[point.status] }}
+              </span>
+              <span class="dp-point-item__meta">{{ point.municipality }}</span>
+              <span class="dp-point-item__meta">
+                <strong>{{ distribucion.panel.addressLabel }}:</strong> {{ point.address }}
+              </span>
+              <span class="dp-point-item__meta">
+                <strong>{{ distribucion.panel.scheduleLabel }}:</strong> {{ point.schedule }}
+              </span>
+              <span class="dp-point-item__meta">
+                <strong>{{ distribucion.panel.phoneLabel }}:</strong> {{ point.phone }}
+              </span>
+            </button>
+          </div>
+          <p v-else class="dp-points-empty">
+            No hay puntos de distribución disponibles por el momento.
           </p>
         </article>
 

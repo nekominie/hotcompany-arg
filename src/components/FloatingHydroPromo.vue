@@ -1,7 +1,7 @@
 <template>
   <a
     href="distribucion.html"
-    class="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-full bg-fisinor-dark p-2 pr-5 text-white shadow-2xl transition-all duration-200 hover:scale-105 hover:shadow-fisinor-cyan/30 focus:outline-none focus:ring-2 focus:ring-fisinor-cyan focus:ring-offset-2"
+    class="fixed bottom-4 left-4 z-50 flex items-center gap-3 rounded-full bg-fisinor-dark p-2 pr-5 text-white shadow-2xl transition-all duration-200 hover:scale-105 hover:shadow-fisinor-cyan/30 focus:outline-none focus:ring-2 focus:ring-fisinor-cyan focus:ring-offset-2"
     aria-label="Programa HydroSoma, gratis. Ir a la página de distribución."
   >
     <span class="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-fisinor-cyan">
