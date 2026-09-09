@@ -28,6 +28,7 @@ export interface FisinorConfig {
       reports: string
     }
     completionStorageKey: string
+    progressStorageKeyPrefix: string
     distributionPlaceholderHint: string
   }
   vpnWarning: {
@@ -89,35 +90,30 @@ export interface DistribucionConfig {
   apiEndpoint: string
   center: { lat: number; lng: number }
   zoom: number
+  mapAriaLabel: string
   legend: DistributionLegendConfig[]
   program: {
     title: string
     paragraphs: string[]
     stats: DistributionStatConfig[]
     dataSourceApi: string
+    dataSourceError: string
   }
   panel: {
-    pointsLabel: string
+    legendTitle: string
+    listTitle: string
+    listAriaLabel: string
+    emptyLabel: string
+    flyToTitlePrefix: string
     pointCountLabel: string
     selectHint: string
     addressLabel: string
     scheduleLabel: string
     phoneLabel: string
+    noPhoneLabel: string
     statusLabels: Record<DistributionPointConfig['status'], string>
     showPanelsLabel: string
     hidePanelsLabel: string
-    formTitle: string
-    formFields: {
-      name: TiendaFieldConfig
-      address: TiendaFieldConfig
-      schedule: TiendaFieldConfig
-      phone: TiendaFieldConfig
-      note: TiendaFieldConfig
-    }
-    statusFieldLabel: string
-    savePointLabel: string
-    cancelLabel: string
-    deletePointLabel: string
   }
 }
 
@@ -887,6 +883,7 @@ export const fisinorConfig: FisinorConfig = {
       reports: 'fisinor:report-anomaly-interest',
     },
     completionStorageKey: 'fisinor:assistant-flow-completed',
+    progressStorageKeyPrefix: 'fisinor:assistant-progress',
     distributionPlaceholderHint:
       'Puedes usar {{punto}}, {{municipio}} y {{direccion}} en los mensajes y se reemplazan con el punto seleccionado.',
   },
@@ -1462,39 +1459,42 @@ export const fisinorConfig: FisinorConfig = {
   },
 
   distribucion: {
-    brandTitle: 'Red de Distribución HydraSoma',
-    brandSubtitle: 'Ubica tu punto de distribución más cercano',
-    backLabel: 'Volver al sitio',
+    brandTitle: 'Programa de Distribución HydroSoma',
+    brandSubtitle: 'Haz click en un punto para ver mas información',
+    backLabel: 'Ir al sitio web principal',
     footerNote:
-      '© FISINOR S.A. de C.V. Programa de Distribución HydraSoma. Los puntos mostrados corresponden al ciclo vigente y pueden cambiar sin previo aviso.',
+      '© FISINOR S.A. de C.V. Programa de Distribución HydroSoma. Los puntos mostrados corresponden al ciclo vigente y pueden cambiar sin previo aviso.',
     apiEndpoint: '/api/v1/distribution-points',
     center: { lat: 29.0833, lng: -110.9640 },
     zoom: 17,
+    mapAriaLabel: 'Mapa de puntos de distribución',
     legend: [
       { id: 'active', label: 'Activo · con inventario' },
-      { id: 'resupply', label: 'Reabastecimiento en camino' },
-      { id: 'unavailable', label: 'Temporalmente sin servicio' },
+      { id: 'resupply', label: 'Quedan pocas unidades' },
+      { id: 'unavailable', label: 'Sin servicio · esperando restock' },
     ],
     program: {
-      title: 'Programa de Distribución HydraSoma',
+      title: 'La bebida superior en hidratación, gratis',
       paragraphs: [
-        'La red de distribución de HydraSoma acerca la hidratación celular de FISINOR a los hogares de Sonora a través de puntos autorizados en plazas, tiendas aliadas y módulos móviles del campus.',
-        'Cada punto recibe inventario certificado y es auditado semanalmente por el programa de garantía de calidad. Presenta tu gafete de suscriptor o tu código de expediente para acceder a precios preferenciales.',
+        'En colaboración con la Universidad de Sonora, FISINOR ha establecido una red de puntos de distribución de HydroSoma en el campus y sus alrededores. Cada punto está equipado para ofrecer la bebida de hidratación celular a estudiantes, personal y visitantes durante los horarios establecidos.',
       ],
       stats: [
-        { id: 'active-points', label: 'PUNTOS ACTIVOS', value: '6' },
-        { id: 'municipalities', label: 'MUNICIPIOS', value: '4' },
-        { id: 'next-resupply', label: 'PRÓXIMA REPOSICIÓN', value: '14 OCT' },
       ],
       dataSourceApi: 'Datos: API de distribución (v1) en línea',
+      dataSourceError: 'Datos: API de distribución no disponible',
     },
     panel: {
-      pointsLabel: 'Puntos de distribución',
+      legendTitle: 'Leyenda',
+      listTitle: 'Puntos de distribución',
+      listAriaLabel: 'Lista de puntos de distribución',
+      emptyLabel: 'No hay puntos de distribución disponibles por el momento.',
+      flyToTitlePrefix: 'Volar a',
       pointCountLabel: 'puntos visibles',
-      selectHint: 'Haz clic en un marcador del mapa para ver los detalles del punto.',
+      selectHint: '',
       addressLabel: 'Dirección',
       scheduleLabel: 'Horario',
       phoneLabel: 'Teléfono',
+      noPhoneLabel: '—',
       statusLabels: {
         active: 'Activo',
         resupply: 'En reabastecimiento',
@@ -1502,18 +1502,6 @@ export const fisinorConfig: FisinorConfig = {
       },
       showPanelsLabel: 'Mostrar paneles',
       hidePanelsLabel: 'Ocultar paneles',
-      formTitle: 'Nuevo punto de distribución',
-      formFields: {
-        name: { label: 'Nombre del punto', placeholder: 'Ej. Módulo Campus Norte' },
-        address: { label: 'Dirección', placeholder: 'Calle, número, referencias' },
-        schedule: { label: 'Horario', placeholder: 'Ej. Lun–Sáb · 08:00 a 20:00 h' },
-        phone: { label: 'Teléfono', placeholder: 'Ej. 662 123 4567' },
-        note: { label: 'Nota para el visitante', placeholder: 'Ej. Ingreso por la puerta este del estacionamiento.' },
-      },
-      statusFieldLabel: 'Estado del punto',
-      savePointLabel: 'Guardar punto',
-      cancelLabel: 'Cancelar',
-      deletePointLabel: 'Eliminar',
     },
 
   },

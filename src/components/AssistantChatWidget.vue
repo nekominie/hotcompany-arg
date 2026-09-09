@@ -145,6 +145,34 @@ function isEmailLike(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
+// Persistencia GLOBAL del progreso (sobrevive cierre de pestaña/navegador):
+// si el chat se disparó en un escenario, ese escenario manda en todas las
+// páginas y el flujo no se vuelve a disparar.
+function progressKey(
+  suffix: 'triggered' | 'scenario' | 'context' | 'emailSubmitted' | 'email',
+): string {
+  return `${config.progressStorageKeyPrefix}:${suffix}`
+}
+
+// Escenario que manda: el que disparó el chat (o el de esta página si aún no hay disparo).
+let effectiveScenario: AssistantScenario = activeScenario
+
+function storageGet(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function storageSet(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value)
+  } catch {
+    // Almacenamiento no disponible: el chat sigue funcionando sin persistir.
+  }
+}
+
 function clearTimers() {
   for (const timer of timers) {
     window.clearTimeout(timer)
@@ -170,7 +198,9 @@ function sendMessage() {
   if (awaitingReply.value) {
     if (isEmailLike(text)) {
       awaitingReply.value = false
-      submitAssistantReply(text, waitingMessageId, activeScenario).catch(() => {
+      storageSet(progressKey('emailSubmitted'), '1')
+      storageSet(progressKey('email'), text)
+      submitAssistantReply(text, waitingMessageId, effectiveScenario).catch(() => {
         // Sin backend o correo inválido: el flujo continúa de todos modos.
       })
       waitingMessageId = null
@@ -277,7 +307,16 @@ function onTriggerInterest(event: Event) {
       direccion: typeof detail.direccion === 'string' ? detail.direccion : undefined,
     }
   }
+  // Si otro escenario ya disparó el chat, ese manda y este ya no se dispara.
+  if (storageGet(progressKey('triggered')) === '1') {
+    hasTriggered = true
+    return
+  }
   hasTriggered = true
+  effectiveScenario = activeScenario
+  storageSet(progressKey('triggered'), '1')
+  storageSet(progressKey('scenario'), activeScenario)
+  storageSet(progressKey('context'), JSON.stringify(triggerContext))
   timers.push(window.setTimeout(activateRobot, activationDelayMs))
 }
 
@@ -285,7 +324,13 @@ async function loadAssistantScript() {
   try {
     const controller = new AbortController()
     const timeout = window.setTimeout(() => controller.abort(), 3000)
-    const remote = await getAssistantConfig(activeScenario, controller.signal)
+    // Si el chat ya se disparó en otra página, se carga el guion del escenario que manda.
+    if (storageGet(progressKey('triggered')) === '1') {
+      effectiveScenario = normalizeAssistantScenario(storageGet(progressKey('scenario')))
+    } else {
+      effectiveScenario = activeScenario
+    }
+    const remote = await getAssistantConfig(effectiveScenario, controller.signal)
     window.clearTimeout(timeout)
     assistantEnabled = remote.isEnabled
     activationDelayMs = Math.min(300, Math.max(0, remote.activationDelaySeconds)) * 1000
@@ -330,8 +375,66 @@ watch([messages, typing], () => {
   scrollToBottom()
 })
 
+// Restaura una sesión disparada en una visita anterior: entra online con todos
+// los mensajes ya cargados hasta el punto de espera (o el guion completo si el
+// correo ya se envió), sin temporizadores.
+function restorePersistedSession() {
+  if (!remoteLoaded || !assistantEnabled) return
+  if (storageGet(progressKey('triggered')) !== '1') return
+  if (scriptMessages.length === 0) return
+  hasTriggered = true
+  clearTimers()
+  typing.value = false
+  messages.value = []
+  // Contexto del disparo original (para {{punto}}/{{municipio}}/{{direccion}} en otras páginas).
+  try {
+    const rawContext = storageGet(progressKey('context'))
+    if (rawContext) {
+      const parsed = JSON.parse(rawContext) as Partial<AssistantTriggerDetail>
+      triggerContext = {
+        punto: typeof parsed.punto === 'string' ? parsed.punto : undefined,
+        municipio: typeof parsed.municipio === 'string' ? parsed.municipio : undefined,
+        direccion: typeof parsed.direccion === 'string' ? parsed.direccion : undefined,
+      }
+    }
+  } catch {
+    // Sin contexto: los placeholders usarán sus valores por defecto.
+  }
+  const waitingIdx = scriptMessages.findIndex((item) => item.waiting)
+  const submitted = storageGet(progressKey('emailSubmitted')) === '1'
+  const savedEmail = (storageGet(progressKey('email')) ?? '').trim()
+  if (waitingIdx >= 0 && !submitted) {
+    // Se quedó esperando el correo: online, historial visible y input habilitado.
+    isOnline.value = true
+    open.value = true
+    for (let i = 0; i <= waitingIdx; i++) {
+      pushBotMessage(applyPlaceholders(scriptMessages[i].text))
+    }
+    waitingMessageId = scriptMessages[waitingIdx].messageId
+    awaitingReply.value = true
+    scriptIndex = waitingIdx + 1
+  } else {
+    // Sin espera pendiente (correo ya enviado o sin mensaje de espera):
+    // guion completo de una vez y flujo dado por terminado.
+    isOnline.value = false
+    for (let i = 0; i < scriptMessages.length; i++) {
+      pushBotMessage(applyPlaceholders(scriptMessages[i].text))
+      if (i === waitingIdx && submitted && savedEmail.length > 0) {
+        messages.value.push({ id: ++msgId, from: 'user', text: savedEmail })
+      }
+    }
+    scriptIndex = scriptMessages.length
+    awaitingReply.value = false
+    waitingMessageId = null
+    markFlowCompleted()
+  }
+  unread.value = 0
+  scrollToBottom()
+}
+
 onMounted(async () => {
   await loadAssistantScript()
+  restorePersistedSession()
   window.addEventListener(resolvedTriggerEvent, onTriggerInterest)
 })
 

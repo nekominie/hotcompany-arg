@@ -160,7 +160,7 @@ async function loadPoints() {
       lng: row.longitude,
       address: row.address,
       schedule: row.schedule,
-      phone: row.phone ?? '—',
+      phone: row.phone ?? distribucion.value.panel.noPhoneLabel,
       status: row.status,
       note: row.note ?? '',
     }))
@@ -170,7 +170,7 @@ async function loadPoints() {
     clearTimeout(timeout)
     points.value = []
     dataSource.value = 'api'
-    dataSourceNote.value = 'Datos: API de distribución no disponible'
+    dataSourceNote.value = distribucion.value.program.dataSourceError
   }
 }
 
@@ -227,7 +227,7 @@ watch(selectedPointId, () => {
       ref="mapEl"
       class="dp-map"
       role="application"
-      aria-label="Mapa de puntos de distribución"
+      :aria-label="distribucion.mapAriaLabel"
     ></div>
 
     <!-- Capa de paneles flotantes -->
@@ -235,7 +235,7 @@ watch(selectedPointId, () => {
       <!-- Barra superior flotante -->
       <header class="dp-topbar">
         <a href="/" class="dp-topbar__brand">
-          <img src="/img/icon_fisinor.png" alt="FISINOR" class="dp-topbar__logo" />
+          <img src="/img/icon_fisinor.png" :alt="config.brand.shortName" class="dp-topbar__logo" />
           <span>
             <span class="dp-topbar__name brand-title">{{ config.brand.shortName }}</span>
             <span class="dp-topbar__sub">{{ distribucion.brandTitle }}</span>
@@ -274,7 +274,7 @@ watch(selectedPointId, () => {
 
         <!-- Leyenda -->
         <article class="dp-card">
-          <p class="dp-card__eyebrow" style="color: #0f172a">{{ distribucion.panel.pointsLabel }}</p>
+          <p class="dp-card__eyebrow" style="color: #0f172a">{{ distribucion.panel.legendTitle }}</p>
           <div class="dp-legend">
             <div v-for="item in distribucion.legend" :key="item.id" class="dp-legend__item">
               <span class="dp-legend__dot" :class="statusDotClass[item.id]" aria-hidden="true"></span>
@@ -290,7 +290,7 @@ watch(selectedPointId, () => {
         <article class="dp-card dp-list-card">
           <div class="dp-list-card__head">
             <p class="dp-card__eyebrow" style="color: #0f172a">
-              {{ distribucion.panel.pointsLabel }}
+              {{ distribucion.panel.listTitle }}
             </p>
             <span class="dp-list-card__count">
               {{ points.length }} {{ distribucion.panel.pointCountLabel }}
@@ -302,7 +302,7 @@ watch(selectedPointId, () => {
             ref="pointsListEl"
             class="dp-points-list"
             role="list"
-            aria-label="Lista de puntos de distribución"
+            :aria-label="distribucion.panel.listAriaLabel"
           >
             <button
               v-for="point in points"
@@ -313,7 +313,7 @@ watch(selectedPointId, () => {
               :class="{ 'dp-point-item--selected': point.id === selectedPointId }"
               :data-point-id="point.id"
               :aria-current="point.id === selectedPointId ? 'true' : undefined"
-              :title="`Volar a ${point.name}`"
+              :title="`${distribucion.panel.flyToTitlePrefix} ${point.name}`"
               @click="selectPoint(point.id)"
             >
               <span class="dp-point-item__head">
@@ -336,7 +336,7 @@ watch(selectedPointId, () => {
             </button>
           </div>
           <p v-else class="dp-points-empty">
-            No hay puntos de distribución disponibles por el momento.
+            {{ distribucion.panel.emptyLabel }}
           </p>
         </article>
 
