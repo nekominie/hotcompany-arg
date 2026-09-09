@@ -1,9 +1,34 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { fisinorConfig } from '../config/fisinorConfig'
-import { getAssistantConfig, submitAssistantReply } from '../services/apiClient'
+import {
+  getAssistantConfig,
+  normalizeAssistantScenario,
+  submitAssistantReply,
+  type AssistantScenario,
+} from '../services/apiClient'
 
 const config = fisinorConfig.assistant
+
+export interface AssistantTriggerDetail {
+  punto?: string
+  municipio?: string
+  direccion?: string
+}
+
+const props = withDefaults(
+  defineProps<{
+    scenario?: AssistantScenario
+    triggerEvent?: string | null
+  }>(),
+  { scenario: 'employees', triggerEvent: null },
+)
+
+const activeScenario: AssistantScenario = normalizeAssistantScenario(props.scenario)
+const resolvedTriggerEvent =
+  props.triggerEvent && props.triggerEvent.length > 0
+    ? props.triggerEvent
+    : config.triggerEvents[activeScenario]
 
 interface ChatMsg {
   id: number
@@ -27,19 +52,88 @@ interface ScriptItem {
   messageId: string | null
 }
 
-const FALLBACK_SCRIPT: ScriptItem[] = [
-  { text: 'Hola, soy KIARA, la asistente de FISINOR. Vi que intentaste entrar al Portal de Empleados.', delayMs: 2000, waiting: false, messageId: null },
-  { text: 'Ese acceso requiere VPN institucional. ¿Te ayudo a verificar tu conexión?', delayMs: 3000, waiting: false, messageId: null },
-  { text: 'Si no tienes VPN, escríbenos a redes@fisinor.com.mx · EXT. 4000.', delayMs: 3000, waiting: false, messageId: null },
-]
+// Sin guion del backend no hay flujo: si la API está caída, el robot no se dispara.
+let scriptMessages: ScriptItem[] = []
 
-let scriptMessages: ScriptItem[] = [...FALLBACK_SCRIPT]
+// Contexto del disparo (punto seleccionado en distribución) para {{punto}}/{{municipio}}/{{direccion}}.
+let triggerContext: AssistantTriggerDetail = {}
+
+function applyPlaceholders(text: string): string {
+  return text
+    .replaceAll('{{punto}}', (triggerContext.punto ?? '').trim() || 'ese punto')
+    .replaceAll('{{municipio}}', (triggerContext.municipio ?? '').trim())
+    .replaceAll('{{direccion}}', (triggerContext.direccion ?? '').trim())
+}
 let assistantEnabled = true
 let activationDelayMs = 8000
 let fallbackMessageDelayMs = 3000
-const FALLBACK_INVALID_EMAIL_MESSAGE = 'Ese correo no parece válido. Escríbelo de nuevo, por favor.'
-let invalidEmailMessage = FALLBACK_INVALID_EMAIL_MESSAGE
+// Solo cuenta como completado el flujo con guion real del backend.
+let remoteLoaded = false
+
+function isFlowCompleted(): boolean {
+  try {
+    return window.localStorage.getItem(config.completionStorageKey) === '1'
+  } catch {
+    return false
+  }
+}
+
+function markFlowCompleted() {
+  if (!remoteLoaded) return
+  try {
+    window.localStorage.setItem(config.completionStorageKey, '1')
+  } catch {
+    // Almacenamiento no disponible: el flujo simplemente podrá repetirse en otra vista.
+  }
+}
+// Pool de variantes ante correo inválido (una por línea en el masterpanel).
+// Se responden en orden aleatorio sin repetir hasta agotarlas.
+let invalidEmailPool: string[] = []
+// Mensaje por defecto cuando ya se mostraron todas las variantes (null = repetir la última).
+let invalidEmailExhaustedMessage: string | null = null
+// Cola barajada pendiente + última variante mostrada (para repetir si no hay default).
+let invalidEmailQueue: string[] = []
+let lastInvalidEmailMessage: string | null = null
 let hasTriggered = false
+
+function parseInvalidEmailPool(raw: unknown): string[] {
+  if (typeof raw !== 'string') return []
+  return raw
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+}
+
+function parseExhaustedMessage(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null
+  const text = raw.trim()
+  return text.length > 0 ? text : null
+}
+
+function shuffleMessages(list: string[]): string[] {
+  const copy = [...list]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
+function resetInvalidEmailCycle() {
+  invalidEmailQueue = shuffleMessages(invalidEmailPool)
+  lastInvalidEmailMessage = null
+}
+
+function nextInvalidEmailMessage(): string | null {
+  if (invalidEmailQueue.length > 0) {
+    const next = invalidEmailQueue.pop() as string
+    lastInvalidEmailMessage = next
+    return next
+  }
+  if (invalidEmailExhaustedMessage) return invalidEmailExhaustedMessage
+  // Sin mensaje por defecto: se repite la última variante para no dejar el chat en silencio.
+  return lastInvalidEmailMessage
+}
 let timers: number[] = []
 let msgId = 0
 let scriptIndex = 0
@@ -76,20 +170,23 @@ function sendMessage() {
   if (awaitingReply.value) {
     if (isEmailLike(text)) {
       awaitingReply.value = false
-      submitAssistantReply(text, waitingMessageId).catch(() => {
+      submitAssistantReply(text, waitingMessageId, activeScenario).catch(() => {
         // Sin backend o correo inválido: el flujo continúa de todos modos.
       })
       waitingMessageId = null
       playNext()
     } else {
-      // Formato inválido: responde con el mensaje configurable y sigue esperando otro input.
-      if (invalidEmailMessage) {
+      // Formato inválido: responde con una variante aleatoria sin repetir y sigue esperando otro input.
+      // Agotadas las variantes, usa el mensaje por defecto (o repite la última si no hay).
+      const reply = nextInvalidEmailMessage()
+      if (reply) {
+        const finalReply = applyPlaceholders(reply)
         typing.value = true
         scrollToBottom()
         timers.push(
           window.setTimeout(() => {
             typing.value = false
-            pushBotMessage(invalidEmailMessage)
+            pushBotMessage(finalReply)
           }, 800),
         )
       }
@@ -113,12 +210,16 @@ function activateRobot() {
   unread.value = 0
 
   if (scriptMessages.length === 0) {
+    // Sin guion no hay flujo: queda desconectado de inmediato.
+    isOnline.value = false
+    markFlowCompleted()
     return
   }
 
   scriptIndex = 0
   awaitingReply.value = false
   waitingMessageId = null
+  resetInvalidEmailCycle()
   playNext()
 }
 
@@ -126,6 +227,11 @@ function activateRobot() {
 function playNext() {
   if (scriptIndex >= scriptMessages.length) {
     typing.value = false
+    // Flujo terminado: el robot se muestra desconectado pero los mensajes se conservan.
+    if (!awaitingReply.value) {
+      isOnline.value = false
+      markFlowCompleted()
+    }
     return
   }
 
@@ -134,7 +240,7 @@ function playNext() {
 
   const show = () => {
     typing.value = false
-    pushBotMessage(item.text)
+    pushBotMessage(applyPlaceholders(item.text))
     scriptIndex += 1
     if (item.waiting) {
       // Pausa: el siguiente mensaje llegará cuando el usuario responda.
@@ -160,8 +266,17 @@ function playNext() {
   }
 }
 
-function onEmployeePortalInterest() {
-  if (hasTriggered) return
+function onTriggerInterest(event: Event) {
+  // Si el flujo ya se completó en cualquier vista, o no hay guion del backend, no se activa.
+  if (hasTriggered || isFlowCompleted() || scriptMessages.length === 0) return
+  const detail = (event as CustomEvent<AssistantTriggerDetail | null>).detail
+  if (detail && typeof detail === 'object') {
+    triggerContext = {
+      punto: typeof detail.punto === 'string' ? detail.punto : undefined,
+      municipio: typeof detail.municipio === 'string' ? detail.municipio : undefined,
+      direccion: typeof detail.direccion === 'string' ? detail.direccion : undefined,
+    }
+  }
   hasTriggered = true
   timers.push(window.setTimeout(activateRobot, activationDelayMs))
 }
@@ -170,15 +285,14 @@ async function loadAssistantScript() {
   try {
     const controller = new AbortController()
     const timeout = window.setTimeout(() => controller.abort(), 3000)
-    const remote = await getAssistantConfig(controller.signal)
+    const remote = await getAssistantConfig(activeScenario, controller.signal)
     window.clearTimeout(timeout)
     assistantEnabled = remote.isEnabled
     activationDelayMs = Math.min(300, Math.max(0, remote.activationDelaySeconds)) * 1000
     fallbackMessageDelayMs = Math.min(120, Math.max(0, remote.messageDelaySeconds)) * 1000
-    invalidEmailMessage =
-      typeof remote.invalidEmailMessage === 'string' && remote.invalidEmailMessage.trim().length > 0
-        ? remote.invalidEmailMessage.trim()
-        : FALLBACK_INVALID_EMAIL_MESSAGE
+    invalidEmailPool = parseInvalidEmailPool(remote.invalidEmailMessage)
+    invalidEmailExhaustedMessage = parseExhaustedMessage(remote.invalidEmailExhaustedMessage)
+    resetInvalidEmailCycle()
     const items = (remote.messages ?? [])
       .map((m) => ({
         text: typeof m.body === 'string' ? m.body.trim() : '',
@@ -194,9 +308,14 @@ async function loadAssistantScript() {
     if (items.length > 0) {
       scriptMessages = items.slice(0, 20)
     }
+    remoteLoaded = true
   } catch {
-    // Sin backend: se queda el guion local por defecto para no romper el ARG.
-    scriptMessages = [...FALLBACK_SCRIPT]
+    // Sin backend no hay flujo: el robot permanece desconectado y no se dispara.
+    scriptMessages = []
+    invalidEmailPool = []
+    invalidEmailExhaustedMessage = null
+    resetInvalidEmailCycle()
+    remoteLoaded = false
   }
 }
 
@@ -213,11 +332,11 @@ watch([messages, typing], () => {
 
 onMounted(async () => {
   await loadAssistantScript()
-  window.addEventListener('fisinor:employee-portal-interest', onEmployeePortalInterest)
+  window.addEventListener(resolvedTriggerEvent, onTriggerInterest)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('fisinor:employee-portal-interest', onEmployeePortalInterest)
+  window.removeEventListener(resolvedTriggerEvent, onTriggerInterest)
   clearTimers()
 })
 </script>

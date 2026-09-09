@@ -2,6 +2,7 @@
 import { ref, reactive, computed } from 'vue'
 import { fisinorConfig } from '../config/fisinorConfig'
 import { submitAnomalyReport, type ApiError } from '../services/apiClient'
+import AssistantChatWidget from '../components/AssistantChatWidget.vue'
 
 const cfg = fisinorConfig.anomalyReportForm
 
@@ -90,6 +91,9 @@ function attachFiles(files: FileList | null) {
   }
 
   attachedFiles.value.push(...newFiles)
+  if (newFiles.length > 0) {
+    notifyAssistantOfInterest()
+  }
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -117,11 +121,21 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+let hasNotifiedAssistant = false
+
+function notifyAssistantOfInterest() {
+  // Primera interacción con el formulario: avisa al robot flotante (solo reacciona la primera vez).
+  if (hasNotifiedAssistant) return
+  hasNotifiedAssistant = true
+  window.dispatchEvent(new CustomEvent(fisinorConfig.assistant.triggerEvents.reports))
+}
+
 function toggleAnomaly(id: string) {
   if (form.anomalies.includes(id)) {
     form.anomalies = form.anomalies.filter((a) => a !== id)
   } else {
     form.anomalies.push(id)
+    notifyAssistantOfInterest()
   }
 }
 
@@ -145,19 +159,19 @@ function onFileChange(event: Event) {
 
 function validateForm(): string | null {
   if (!form.notifierEmail.trim()) {
-    return 'El correo electrónico del notificante es obligatorio.'
+    return cfg.validation.emailRequired
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.notifierEmail.trim())) {
-    return 'El formato del correo electrónico no es válido.'
+    return cfg.validation.emailInvalid
   }
   if (!form.sightingLocation) {
-    return 'La ubicación del avistamiento es obligatoria.'
+    return cfg.validation.locationRequired
   }
   if (!form.subjectRelation) {
-    return 'La relación con el sujeto observado es obligatoria.'
+    return cfg.validation.relationRequired
   }
   if (form.anomalies.length === 0) {
-    return 'Debe seleccionar al menos una anomalía.'
+    return cfg.validation.anomaliesRequired
   }
   return null
 }
@@ -435,6 +449,7 @@ const privacyNoteParts = computed(() => {
                   :placeholder="cfg.sections.notifier.email.placeholder"
                   :required="cfg.sections.notifier.email.required"
                   class="mt-2 w-full rounded border border-slate-300 px-3 py-2.5 text-sm focus:border-fisinor-cyan focus:outline-none focus:ring-1 focus:ring-fisinor-cyan"
+                  @input="notifyAssistantOfInterest"
                 />
               </div>
 
@@ -449,13 +464,14 @@ const privacyNoteParts = computed(() => {
                   type="text"
                   :placeholder="cfg.sections.notifier.identifier.placeholder"
                   class="mt-2 w-full rounded border border-slate-300 px-3 py-2.5 text-sm focus:border-fisinor-cyan focus:outline-none focus:ring-1 focus:ring-fisinor-cyan"
+                  @input="notifyAssistantOfInterest"
                 />
               </div>
             </div>
 
             <div class="mt-5 rounded border border-slate-200 bg-fisinor-hospital p-4">
               <label class="flex cursor-pointer items-start gap-3">
-                <input v-model="form.anonymity" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-fisinor-cyan focus:ring-fisinor-cyan" />
+                <input v-model="form.anonymity" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-fisinor-cyan focus:ring-fisinor-cyan" @change="notifyAssistantOfInterest" />
                 <div>
                   <span class="text-sm font-semibold text-fisinor-dark">{{ cfg.sections.notifier.anonymity.label }}</span>
                   <p class="mt-0.5 text-xs text-slate-500">{{ cfg.sections.notifier.anonymity.helper }}</p>
@@ -485,6 +501,7 @@ const privacyNoteParts = computed(() => {
                   v-model="form.sightingLocation"
                   :required="cfg.sections.sighting.location.required"
                   class="mt-2 w-full rounded border border-slate-300 px-3 py-2.5 text-sm focus:border-fisinor-cyan focus:outline-none focus:ring-1 focus:ring-fisinor-cyan"
+                  @change="notifyAssistantOfInterest"
                 >
                   <option value="" disabled>{{ cfg.sections.sighting.location.placeholder }}</option>
                   <option v-for="opt in cfg.sections.sighting.location.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -501,6 +518,7 @@ const privacyNoteParts = computed(() => {
                   v-model="form.subjectRelation"
                   :required="cfg.sections.sighting.relation.required"
                   class="mt-2 w-full rounded border border-slate-300 px-3 py-2.5 text-sm focus:border-fisinor-cyan focus:outline-none focus:ring-1 focus:ring-fisinor-cyan"
+                  @change="notifyAssistantOfInterest"
                 >
                   <option value="" disabled>{{ cfg.sections.sighting.relation.placeholder }}</option>
                   <option v-for="opt in cfg.sections.sighting.relation.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -514,7 +532,10 @@ const privacyNoteParts = computed(() => {
             <div class="mb-5 flex items-center gap-3">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-fisinor-dark text-sm font-bold text-white">3</div>
               <div>
-                <h3 class="font-serif text-lg font-semibold text-fisinor-dark">{{ cfg.sections.anomalies.title }}</h3>
+                <h3 class="font-serif text-lg font-semibold text-fisinor-dark">
+                  {{ cfg.sections.anomalies.title }}
+                  <span v-if="cfg.sections.anomalies.required" class="text-red-500">*</span>
+                </h3>
                 <p class="text-xs text-slate-500">{{ cfg.sections.anomalies.description }}</p>
               </div>
             </div>
@@ -660,6 +681,7 @@ const privacyNoteParts = computed(() => {
                 :maxlength="cfg.sections.observations.field.maxLength"
                 rows="6"
                 class="mt-2 w-full resize-y rounded border border-slate-300 px-3 py-2.5 text-sm focus:border-fisinor-cyan focus:outline-none focus:ring-1 focus:ring-fisinor-cyan"
+                @input="notifyAssistantOfInterest"
               ></textarea>
               <p class="mt-1 text-right text-xs text-slate-400">
                 {{ form.observations.length }} / {{ cfg.sections.observations.field.maxLength }}
@@ -703,6 +725,9 @@ const privacyNoteParts = computed(() => {
         <p class="mt-3 text-xs text-slate-400">{{ cfg.footer.copyright }}</p>
       </div>
     </footer>
+
+    <!-- Robot asistente del escenario de reportes -->
+    <AssistantChatWidget scenario="reports" />
   </div>
 </template>
 

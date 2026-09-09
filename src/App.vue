@@ -13,7 +13,7 @@ import EmployeePortalModal from './components/EmployeePortalModal.vue'
 import VpnWarningModal from './components/VpnWarningModal.vue'
 import FloatingHydroPromo from './components/FloatingHydroPromo.vue'
 import AssistantChatWidget from './components/AssistantChatWidget.vue'
-import { type PortalOptionConfig } from './config/fisinorConfig'
+import { fisinorConfig, type PortalOptionConfig } from './config/fisinorConfig'
 
 type PortalView = 'selector' | 'employee' | 'vpn' | null
 
@@ -22,7 +22,7 @@ const activePortal = ref<PortalView>(null)
 function onPortalSelect(option: PortalOptionConfig) {
   if (option.id === 'employees') {
     // El usuario mostró interés en el portal de empleados: avisa al robot flotante.
-    window.dispatchEvent(new CustomEvent('fisinor:employee-portal-interest'))
+    window.dispatchEvent(new CustomEvent(fisinorConfig.assistant.triggerEvents.employees))
   }
   if (option.action === 'vpn') {
     // El portal de empleados exige VPN: se muestra la advertencia y no se redirige.

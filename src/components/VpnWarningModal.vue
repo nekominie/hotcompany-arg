@@ -1,13 +1,42 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { fisinorConfig } from '../config/fisinorConfig'
+import { fetchEmployeesAccess } from '../services/apiClient'
 
-defineProps<{
+const props = defineProps<{
   open: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
+
+type AccessState = 'checking' | 'granted' | 'denied'
+
+const state = ref<AccessState>('checking')
+let abort: AbortController | null = null
+
+async function verifyAccess() {
+  abort?.abort()
+  abort = new AbortController()
+  state.value = 'checking'
+  // Falla cerrado: sin servidor o sin pase, se muestra el bloqueo.
+  const access = await fetchEmployeesAccess(abort.signal)
+  state.value = access.allowed ? 'granted' : 'denied'
+}
+
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (isOpen) {
+      void verifyAccess()
+    } else {
+      abort?.abort()
+      state.value = 'checking'
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -23,16 +52,21 @@ const emit = defineEmits<{
         class="vpn-modal"
         @click.self="emit('close')"
       >
-        <div class="vpn-card" role="alertdialog" aria-modal="true">
+        <div class="vpn-card" :class="{ 'vpn-card--granted': state === 'granted' }" role="alertdialog" aria-modal="true">
           <!-- Sello girado tipo estampa institucional -->
-          <div class="vpn-stamp">{{ fisinorConfig.vpnWarning.stamp }}</div>
+          <div class="vpn-stamp" :class="{ 'vpn-stamp--granted': state === 'granted' }">
+            {{ state === 'granted' ? fisinorConfig.vpnWarning.grantedStamp : fisinorConfig.vpnWarning.stamp }}
+          </div>
 
           <!-- Escudo con anillos de radar -->
           <div class="vpn-shield">
             <span class="vpn-shield__ring vpn-shield__ring--slow" aria-hidden="true"></span>
             <span class="vpn-shield__ring vpn-shield__ring--fast" aria-hidden="true"></span>
-            <span class="vpn-shield__badge" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+            <span class="vpn-shield__badge" :class="{ 'vpn-shield__badge--granted': state === 'granted' }" aria-hidden="true">
+              <svg v-if="state === 'granted'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -45,42 +79,75 @@ const emit = defineEmits<{
           </div>
 
           <!-- Estado de conexión -->
-          <div class="vpn-status">
+          <div
+            class="vpn-status"
+            :class="{
+              'vpn-status--granted': state === 'granted',
+              'vpn-status--checking': state === 'checking',
+            }"
+          >
             <span class="vpn-status__dot" aria-hidden="true"></span>
-            VPN · NO DETECTADA
+            {{
+              state === 'granted'
+                ? fisinorConfig.vpnWarning.statusGranted
+                : state === 'checking'
+                  ? fisinorConfig.vpnWarning.checkingLabel
+                  : fisinorConfig.vpnWarning.statusDenied
+            }}
           </div>
 
-          <h3 class="vpn-title">{{ fisinorConfig.vpnWarning.title }}</h3>
-          <p class="vpn-message">{{ fisinorConfig.vpnWarning.message }}</p>
+          <!-- Verificando -->
+          <template v-if="state === 'checking'">
+            <h3 class="vpn-title">{{ fisinorConfig.vpnWarning.checkingLabel }}</h3>
+          </template>
 
-          <div class="vpn-steps">
-            <p class="vpn-steps__label">{{ fisinorConfig.vpnWarning.requirementsTitle }}</p>
-            <ol class="vpn-steps__list">
-              <li v-for="(requirement, index) in fisinorConfig.vpnWarning.requirements" :key="requirement">
-                <span class="vpn-steps__number">{{ index + 1 }}</span>
-                <span>{{ requirement }}</span>
-              </li>
-            </ol>
-          </div>
+          <!-- Acceso concedido por pase vigente -->
+          <template v-else-if="state === 'granted'">
+            <h3 class="vpn-title">{{ fisinorConfig.vpnWarning.grantedTitle }}</h3>
+            <p class="vpn-message">{{ fisinorConfig.vpnWarning.grantedMessage }}</p>
 
-          <div class="vpn-contact">
-            <p class="vpn-contact__label">{{ fisinorConfig.vpnWarning.contactTitle }}</p>
-            <div class="vpn-contact__row">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" />
-              </svg>
-              <div>
-                <span class="vpn-contact__name">{{ fisinorConfig.vpnWarning.contactName }}</span>
-                <span class="vpn-contact__data">
-                  {{ fisinorConfig.vpnWarning.contactEmail }} · {{ fisinorConfig.vpnWarning.contactExtension }}
-                </span>
+            <a class="vpn-accept vpn-enter" :href="fisinorConfig.vpnWarning.employeesPortalEntry">
+              {{ fisinorConfig.vpnWarning.enterLabel }}
+            </a>
+            <button type="button" class="vpn-close" @click="emit('close')">
+              {{ fisinorConfig.vpnWarning.acceptLabel }}
+            </button>
+          </template>
+
+          <!-- Bloqueado -->
+          <template v-else>
+            <h3 class="vpn-title">{{ fisinorConfig.vpnWarning.title }}</h3>
+            <p class="vpn-message">{{ fisinorConfig.vpnWarning.message }}</p>
+
+            <div class="vpn-steps">
+              <p class="vpn-steps__label">{{ fisinorConfig.vpnWarning.requirementsTitle }}</p>
+              <ol class="vpn-steps__list">
+                <li v-for="(requirement, index) in fisinorConfig.vpnWarning.requirements" :key="requirement">
+                  <span class="vpn-steps__number">{{ index + 1 }}</span>
+                  <span>{{ requirement }}</span>
+                </li>
+              </ol>
+            </div>
+
+            <div class="vpn-contact">
+              <p class="vpn-contact__label">{{ fisinorConfig.vpnWarning.contactTitle }}</p>
+              <div class="vpn-contact__row">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" />
+                </svg>
+                <div>
+                  <span class="vpn-contact__name">{{ fisinorConfig.vpnWarning.contactName }}</span>
+                  <span class="vpn-contact__data">
+                    {{ fisinorConfig.vpnWarning.contactEmail }} · {{ fisinorConfig.vpnWarning.contactExtension }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <button type="button" class="vpn-accept" @click="emit('close')">
-            {{ fisinorConfig.vpnWarning.acceptLabel }}
-          </button>
+            <button type="button" class="vpn-accept" @click="emit('close')">
+              {{ fisinorConfig.vpnWarning.acceptLabel }}
+            </button>
+          </template>
         </div>
       </div>
     </Transition>
@@ -116,6 +183,10 @@ const emit = defineEmits<{
   text-align: center;
 }
 
+.vpn-card--granted {
+  border-top-color: #10b981;
+}
+
 /* Retícula tenue sobre el panel */
 .vpn-card::before {
   content: '';
@@ -144,6 +215,13 @@ const emit = defineEmits<{
   text-transform: uppercase;
   background: rgba(127, 29, 29, 0.25);
   box-shadow: 0 0 18px rgba(220, 38, 38, 0.25);
+}
+
+.vpn-stamp--granted {
+  border-color: rgba(52, 211, 153, 0.85);
+  color: rgba(167, 243, 208, 0.95);
+  background: rgba(6, 78, 59, 0.35);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.25);
 }
 
 /* Escudo con anillos de radar */
@@ -190,6 +268,12 @@ const emit = defineEmits<{
   color: #fbbf24;
 }
 
+.vpn-shield__badge--granted {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(23, 153, 181, 0.18));
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #34d399;
+}
+
 .vpn-shield__badge svg {
   width: 34px;
   height: 34px;
@@ -211,6 +295,18 @@ const emit = defineEmits<{
   letter-spacing: 0.22em;
 }
 
+.vpn-status--granted {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(6, 78, 59, 0.35);
+  color: #6ee7b7;
+}
+
+.vpn-status--checking {
+  border-color: rgba(148, 163, 184, 0.4);
+  background: rgba(30, 41, 59, 0.5);
+  color: #cbd5e1;
+}
+
 .vpn-status__dot {
   width: 7px;
   height: 7px;
@@ -218,6 +314,17 @@ const emit = defineEmits<{
   background: #f87171;
   box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
   animation: vpn-blink 1.4s ease-in-out infinite;
+}
+
+.vpn-status--granted .vpn-status__dot {
+  background: #34d399;
+  box-shadow: 0 0 10px rgba(52, 211, 129, 0.9);
+  animation: none;
+}
+
+.vpn-status--checking .vpn-status__dot {
+  background: #94a3b8;
+  box-shadow: 0 0 10px rgba(148, 163, 184, 0.9);
 }
 
 @keyframes vpn-blink {
@@ -362,5 +469,28 @@ const emit = defineEmits<{
   transform: translateY(-1px);
   box-shadow: 0 14px 30px -14px rgba(14, 116, 144, 0.8);
   filter: saturate(1.15);
+}
+
+/* Enlace de entrada (reutiliza el estilo del botón principal) */
+.vpn-enter {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
+/* Cierre secundario en estado concedido */
+.vpn-close {
+  margin-top: 12px;
+  border: none;
+  background: none;
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vpn-close:hover {
+  color: #e2e8f0;
+  text-decoration: underline;
 }
 </style>

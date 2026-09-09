@@ -22,19 +22,35 @@ export interface AssistantMessageConfig {
   isActive?: boolean
 }
 
+export type AssistantScenario = 'employees' | 'distribution' | 'reports'
+
+export function normalizeAssistantScenario(value: unknown): AssistantScenario {
+  if (value === 'distribution') return 'distribution'
+  if (value === 'reports') return 'reports'
+  return 'employees'
+}
+
 export interface AssistantConfigResponse {
   activationDelaySeconds: number
   messageDelaySeconds: number
   isEnabled: boolean
   invalidEmailMessage: string | null
+  invalidEmailExhaustedMessage?: string | null
+  scenario?: string | null
   messages: AssistantMessageConfig[]
 }
 
-export async function getAssistantConfig(signal?: AbortSignal): Promise<AssistantConfigResponse> {
-  const response = await fetch(`${baseUrl}/v1/assistant-config`, {
-    method: 'GET',
-    signal,
-  })
+export async function getAssistantConfig(
+  scenario: AssistantScenario = 'employees',
+  signal?: AbortSignal,
+): Promise<AssistantConfigResponse> {
+  const response = await fetch(
+    `${baseUrl}/v1/assistant-config?scenario=${encodeURIComponent(scenario)}`,
+    {
+      method: 'GET',
+      signal,
+    },
+  )
   if (!response.ok) {
     throw {
       status: response.status,
@@ -44,12 +60,44 @@ export async function getAssistantConfig(signal?: AbortSignal): Promise<Assistan
   return response.json()
 }
 
-export async function submitAssistantReply(email: string, messageId?: string | null): Promise<void> {
-  const response = await fetch(`${baseUrl}/v1/assistant-config/replies`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, messageId: messageId ?? null }),
-  })
+export interface EmployeesAccessResponse {
+  allowed: boolean
+  authenticated: boolean
+}
+
+/**
+ * Pregunta al servidor si la sesión actual tiene pase al Portal de Empleados.
+ * Usa la cookie compartida (credentials:include). Falla cerrado: cualquier error niega.
+ */
+export async function fetchEmployeesAccess(signal?: AbortSignal): Promise<EmployeesAccessResponse> {
+  try {
+    const response = await fetch(`${baseUrl}/v1/client-portal/employees-access`, {
+      method: 'GET',
+      credentials: 'include',
+      signal,
+    })
+    if (!response.ok) return { allowed: false, authenticated: false }
+    const payload = (await response.json()) as EmployeesAccessResponse
+    if (!payload || typeof payload.allowed !== 'boolean') return { allowed: false, authenticated: false }
+    return { allowed: payload.allowed, authenticated: payload.authenticated === true }
+  } catch {
+    return { allowed: false, authenticated: false }
+  }
+}
+
+export async function submitAssistantReply(
+  email: string,
+  messageId?: string | null,
+  scenario: AssistantScenario = 'employees',
+): Promise<void> {
+  const response = await fetch(
+    `${baseUrl}/v1/assistant-config/replies?scenario=${encodeURIComponent(scenario)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, messageId: messageId ?? null, scenario }),
+    },
+  )
   if (!response.ok) {
     throw {
       status: response.status,

@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import { fisinorConfig, type DistributionPointConfig } from '../config/fisinorConfig'
+import AssistantChatWidget from '../components/AssistantChatWidget.vue'
 
 interface ApiDistributionPoint {
   id: string
@@ -107,6 +108,19 @@ function selectPoint(pointId: string) {
   // Centrar la cámara en el punto seleccionado con efecto de vuelo
   if (point && map) {
     map.flyTo([point.lat, point.lng], Math.max(map.getZoom(), 13), { duration: 1.2 })
+  }
+
+  // Avisar al robot flotante (solo reacciona la primera vez): lleva el punto para {{punto}}.
+  if (point) {
+    window.dispatchEvent(
+      new CustomEvent(fisinorConfig.assistant.triggerEvents.distribution, {
+        detail: {
+          punto: point.name,
+          municipio: point.municipality,
+          direccion: point.address,
+        },
+      }),
+    )
   }
 
   scrollListToSelected()
@@ -367,5 +381,8 @@ watch(selectedPointId, () => {
 
     <!-- Nota legal discreta -->
     <p class="dp-footer-note">{{ distribucion.footerNote }}</p>
+
+    <!-- Robot asistente del escenario de distribución -->
+    <AssistantChatWidget scenario="distribution" />
   </div>
 </template>

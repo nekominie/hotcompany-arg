@@ -21,6 +21,7 @@ export default defineConfig({
         reports: resolve(import.meta.dirname, 'reports.html'),
         tienda: resolve(import.meta.dirname, 'tienda.html'),
         distribucion: resolve(import.meta.dirname, 'distribucion.html'),
+        prensa: resolve(import.meta.dirname, 'prensa.html'),
       },
     },
   },

@@ -22,6 +22,13 @@ export interface FisinorConfig {
     offlineNotice: string
     sendLabel: string
     closeLabel: string
+    triggerEvents: {
+      employees: string
+      distribution: string
+      reports: string
+    }
+    completionStorageKey: string
+    distributionPlaceholderHint: string
   }
   vpnWarning: {
     stamp: string
@@ -34,11 +41,20 @@ export interface FisinorConfig {
     contactEmail: string
     contactExtension: string
     acceptLabel: string
+    statusDenied: string
+    statusGranted: string
+    checkingLabel: string
+    grantedStamp: string
+    grantedTitle: string
+    grantedMessage: string
+    enterLabel: string
+    employeesPortalEntry: string
   }
   images: ImageLibrary
   anomalyReportForm: AnomalyReportFormConfig
   tienda: TiendaConfig
   distribucion: DistribucionConfig
+  prensa: PrensaConfig
 }
 
 export interface DistributionPointConfig {
@@ -299,6 +315,24 @@ export interface PressCenterConfig {
   sectionLabel: string
   headline: string
   cards: PressCardConfig[]
+  viewAllLabel: string
+  emptyLabel: string
+  prevLabel: string
+  nextLabel: string
+  readAction: string
+}
+
+export interface PrensaConfig {
+  title: string
+  subtitle: string
+  backLabel: string
+  loadingLabel: string
+  emptyLabel: string
+  readLabel: string
+  byLabel: string
+  detailBackLabel: string
+  notFoundLabel: string
+  countLabel: string
 }
 
 export interface PressCardConfig {
@@ -433,6 +467,7 @@ export interface AnomalyReportFormConfig {
     anomalies: {
       title: string
       description: string
+      required: boolean
       options: AnomalyOptionConfig[]
     }
     evidence: {
@@ -466,6 +501,13 @@ export interface AnomalyReportFormConfig {
       unit: string
       helper: string
     }
+  }
+  validation: {
+    emailRequired: string
+    emailInvalid: string
+    locationRequired: string
+    relationRequired: string
+    anomaliesRequired: string
   }
   footer: {
     privacyNote: string
@@ -654,6 +696,11 @@ export const fisinorConfig: FisinorConfig = {
   pressCenter: {
     sectionLabel: 'Centro de Prensa y Avisos Comunitarios',
     headline: 'Comunicados institucionales del campus.',
+    viewAllLabel: 'Ver todo',
+    emptyLabel: 'No hay artículos disponibles por el momento.',
+    prevLabel: 'Ver anteriores',
+    nextLabel: 'Ver siguientes',
+    readAction: 'read-article',
     cards: [
       {
         id: 'hydra-soma',
@@ -834,6 +881,14 @@ export const fisinorConfig: FisinorConfig = {
     offlineNotice: 'El asistente está desconectado por el momento.',
     sendLabel: 'Enviar mensaje',
     closeLabel: 'Cerrar asistente',
+    triggerEvents: {
+      employees: 'fisinor:employee-portal-interest',
+      distribution: 'fisinor:distribution-point-interest',
+      reports: 'fisinor:report-anomaly-interest',
+    },
+    completionStorageKey: 'fisinor:assistant-flow-completed',
+    distributionPlaceholderHint:
+      'Puedes usar {{punto}}, {{municipio}} y {{direccion}} en los mensajes y se reemplazan con el punto seleccionado.',
   },
 
   vpnWarning: {
@@ -852,6 +907,15 @@ export const fisinorConfig: FisinorConfig = {
     contactEmail: 'redes@fisinor.com.mx',
     contactExtension: 'EXT. 4000',
     acceptLabel: 'Entendido, cerrar',
+    statusDenied: 'VPN · NO DETECTADA',
+    statusGranted: 'PASE · VERIFICADO',
+    checkingLabel: 'Verificando acceso con el servidor...',
+    grantedStamp: 'Acceso concedido',
+    grantedTitle: 'Pase de acceso verificado',
+    grantedMessage:
+      'Se detectó un pase de acceso vigente vinculado a tu sesión. Puedes entrar al Portal de Empleados sin necesidad de VPN.',
+    enterLabel: 'Entrar al Portal de Empleados',
+    employeesPortalEntry: `${(import.meta.env.VITE_EMPLOYEES_PORTAL_URL ?? 'http://localhost:5182/').replace(/\/$/, '')}/empleados/inicio`,
   },
 
   images: {
@@ -945,7 +1009,8 @@ export const fisinorConfig: FisinorConfig = {
       },
       anomalies: {
         title: 'Anomalias Observadas',
-        description: 'Seleccione todos los indicadores que apliquen.',
+        description: 'Seleccione todos los indicadores que apliquen. Debe seleccionar al menos una anomalía.',
+        required: true,
         options: [
           {
             id: 'no-blinking',
@@ -1021,6 +1086,13 @@ export const fisinorConfig: FisinorConfig = {
         unit: '',
         helper: 'Al enviar, usted acepta que la información se utilice para mejorar el servicio de clonación de personas.',
       },
+    },
+    validation: {
+      emailRequired: 'El correo electrónico del notificante es obligatorio.',
+      emailInvalid: 'El formato del correo electrónico no es válido.',
+      locationRequired: 'La ubicación del avistamiento es obligatoria.',
+      relationRequired: 'La relación con el sujeto observado es obligatoria.',
+      anomaliesRequired: 'Debe seleccionar al menos una anomalía.',
     },
     footer: {
       privacyNote:
@@ -1444,5 +1516,18 @@ export const fisinorConfig: FisinorConfig = {
       deletePointLabel: 'Eliminar',
     },
 
+  },
+
+  prensa: {
+    title: 'Centro de Prensa',
+    subtitle: 'Comunicados institucionales del campus.',
+    backLabel: 'Volver al sitio',
+    loadingLabel: 'Cargando comunicados...',
+    emptyLabel: 'No hay comunicados publicados por el momento.',
+    readLabel: 'Leer artículo',
+    byLabel: 'Por',
+    detailBackLabel: 'Volver a comunicados',
+    notFoundLabel: 'Artículo no encontrado o no disponible.',
+    countLabel: 'comunicados',
   },
 }

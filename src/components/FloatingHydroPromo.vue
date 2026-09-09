@@ -7,6 +7,7 @@
     <span class="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-fisinor-cyan">
       <span
         class="absolute -left-1 -top-1 rounded-full bg-fisinor-desert px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-fisinor-dark shadow animate-pulse"
+        style="left: -10px; top: -12px; transform: rotate(-11deg);"
       >
         GRATIS
       </span>
