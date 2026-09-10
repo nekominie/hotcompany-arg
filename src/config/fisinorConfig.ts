@@ -912,7 +912,7 @@ export const fisinorConfig: FisinorConfig = {
     grantedMessage:
       'Se detectó un pase de acceso vigente vinculado a tu sesión. Puedes entrar al Portal de Empleados sin necesidad de VPN.',
     enterLabel: 'Entrar al Portal de Empleados',
-    employeesPortalEntry: `${(import.meta.env.VITE_EMPLOYEES_PORTAL_URL ?? 'http://localhost:5182/').replace(/\/$/, '')}/empleados/inicio`,
+    employeesPortalEntry: `${(import.meta.env.VITE_EMPLOYEES_PORTAL_URL ?? 'http://localhost:5182/').replace(/\/$/, '')}/empleados/login`,
   },
 
   images: {
