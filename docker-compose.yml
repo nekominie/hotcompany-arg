@@ -1,11 +1,100 @@
-version: '3.8'
-
 services:
-  fisinor-web:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fisinor-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fisinor_db
+      POSTGRES_USER: kiara_ai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lovingFisinor6n}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kiara_ai -d fisinor_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fisinor-net
+
+  fisinor-api:
     build:
-      context: .
+      context: ./hot-company-api/Fisinor.Api
+      dockerfile: Dockerfile
+    container_name: fisinor-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=fisinor_db;Username=kiara_ai;Password=${POSTGRES_PASSWORD:-lovingFisinor6n}"
+      Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS:-}
+      Resend__ApiKey: ${RESEND_API_KEY:-}
+      Recovery__ResetBaseUrl: ${RECOVERY_RESET_BASE_URL:-http://localhost:8082/reset-password}
+    ports:
+      - "8085:8080"
+    volumes:
+      - fisinor_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fisinor-net
+
+  fisinor-admin:
+    build:
+      context: ./hot-company-admin
+      dockerfile: Dockerfile
+    container_name: fisinor-admin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    depends_on:
+      - fisinor-api
+    networks:
+      - fisinor-net
+
+  fisinor-clients:
+    build:
+      context: ./hot-company-clients
+      dockerfile: Dockerfile
+    container_name: fisinor-clients
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    depends_on:
+      - fisinor-api
+    networks:
+      - fisinor-net
+
+  fisinor-employees:
+    build:
+      context: ./hot-company-employees
+      dockerfile: Dockerfile
+    container_name: fisinor-employees
+    restart: unless-stopped
+    ports:
+      - "8083:80"
+    depends_on:
+      - fisinor-api
+    networks:
+      - fisinor-net
+
+  fisinor-arg:
+    build:
+      context: ./hotcompany-arg
       dockerfile: Dockerfile
     container_name: fisinor-arg
+    restart: unless-stopped
     ports:
       - "8080:80"
-    restart: unless-stopped
+    depends_on:
+      - fisinor-api
+    networks:
+      - fisinor-net
+
+volumes:
+  postgres_data:
+  fisinor_uploads:
+
+networks:
+  fisinor-net:
+    driver: bridge
